@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIP Calculator — Plan Your Wealth | Rushi Finance Tools</title>
+    <meta name="description"
+        content="Professional SIP calculator with step-up support, mutual fund selector, scenario simulator, inflation adjustment, and interactive charts.">
+    <meta name="keywords"
+        content="SIP calculator, mutual fund, systematic investment plan, step-up SIP, returns calculator">
+    <meta name="author" content="Rushi Sonar">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>Rushi Finance</a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="sip.html" class="active">SIP</a></li>
+                <li><a href="lumpsum.html">Lumpsum</a></li>
+                <li><a href="emi.html">EMI</a></li>
+                <li><a href="goal.html">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
+                <li><a href="ai.html">AI Assistant</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <div class="nav-right">
+                <button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button>
+                <button class="nav-auth-btn" id="nav-login-btn" onclick="showAuthModal('login')">Login</button>
+                <div class="user-menu" id="nav-user-menu" style="display:none">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">R</div>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div class="udh-name" id="ud-name">User</div>
+                            <div class="udh-email" id="ud-email">user@email.com</div>
+                        </div>
+                        <a href="dashboard.html">📊 My Dashboard</a>
+                        <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+                    </div>
+                </div>
+                <button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- AUTH MODAL -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="hideAuthModal()">✕</button>
+            <div id="auth-login-form">
+                <div class="modal-title">Welcome Back 👋</div>
+                <div class="modal-sub">Login to save your calculations & goals</div>
+                <div class="fg"><label for="login-email">Email</label>
+                    <div class="input-w"><input type="email" id="login-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="login-pass">Password</label>
+                    <div class="input-w"><input type="password" id="login-pass" placeholder="••••••••"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doLogin()" style="flex:1">Login</button></div>
+                <div class="modal-switch">Don't have an account? <a onclick="switchAuthMode('signup')">Sign up</a>
+                </div>
+            </div>
+            <div id="auth-signup-form" style="display:none">
+                <div class="modal-title">Create Account 🚀</div>
+                <div class="modal-sub">Start saving your financial calculations</div>
+                <div class="fg"><label for="signup-name">Full Name</label>
+                    <div class="input-w"><input type="text" id="signup-name" placeholder="Rushi Sonar"></div>
+                </div>
+                <div class="fg"><label for="signup-email">Email</label>
+                    <div class="input-w"><input type="email" id="signup-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="signup-pass">Password</label>
+                    <div class="input-w"><input type="password" id="signup-pass" placeholder="Min 4 characters"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doSignup()" style="flex:1">Create
+                        Account</button></div>
+                <div class="modal-switch">Already have an account? <a onclick="switchAuthMode('login')">Login</a></div>
+            </div>
+        </div>
+    </div>
+
+    <main class="page-wrap">
+        <div class="page-head">
+            <span class="icon">📈</span>
+            <h1>SIP Calculator</h1>
+            <p>Calculate returns on systematic monthly investments with step-up, fund selection, and scenario simulation
+            </p>
+        </div>
+        <div class="card">
+            <!-- Fund Selector -->
+            <div class="fg fund-selector">
+                <label for="sip-fund">Select Fund Type (Optional)</label>
+                <div class="input-w">
+                    <select id="sip-fund" onchange="onFundSelect('sip-fund','sip-rate')">
+                        <option value="">— Choose a fund —</option>
+                        <option value="large">Large Cap Fund (Avg 11%)</option>
+                        <option value="mid">Mid Cap Fund (Avg 13%)</option>
+                        <option value="small">Small Cap Fund (Avg 15%)</option>
+                        <option value="index">Index Fund - Nifty 50 (Avg 10%)</option>
+                        <option value="flexi">Flexi Cap Fund (Avg 12%)</option>
+                        <option value="elss">ELSS Tax Saver (Avg 12.5%)</option>
+                    </select>
+                </div>
+                <div class="fund-info" id="sip-fund-info"></div>
+            </div>
+
+            <div class="fg"><label for="sip-amt">Monthly Investment</label>
+                <div class="input-w"><span class="pfx">₹</span><input type="number" id="sip-amt" class="has-pfx"
+                        placeholder="e.g. 5,000"></div>
+                <div class="err-msg" id="e-sip-amt"></div>
+            </div>
+            <div class="fg"><label for="sip-rate">Expected Annual Return</label>
+                <div class="input-w"><input type="number" id="sip-rate" class="has-sfx" placeholder="e.g. 12"
+                        step="0.1"><span class="sfx">% p.a.</span></div>
+                <div class="err-msg" id="e-sip-rate"></div>
+            </div>
+            <div class="fg"><label for="sip-yrs">Duration</label>
+                <div class="input-w"><input type="number" id="sip-yrs" class="has-sfx" placeholder="e.g. 10"><span
+                        class="sfx">Years</span></div>
+                <div class="err-msg" id="e-sip-yrs"></div>
+            </div>
+            <div class="fg"><label for="sip-su">Annual Step-up (Optional)</label>
+                <div class="input-w"><input type="number" id="sip-su" class="has-sfx" placeholder="e.g. 10" step="0.5"
+                        value="0"><span class="sfx">%</span></div>
+                <div class="form-hint">Increase SIP yearly by this percentage</div>
+            </div>
+            <div class="fg"><label for="sip-inf">Inflation Rate (Optional)</label>
+                <div class="input-w"><input type="number" id="sip-inf" class="has-sfx" placeholder="e.g. 6" step="0.5"
+                        value="0"><span class="sfx">% p.a.</span></div>
+                <div class="form-hint">See inflation-adjusted real value of your wealth</div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-go" onclick="calcSIP()">Calculate Returns</button>
+                <button class="btn btn-rst" onclick="rstSIP()">Reset</button>
+            </div>
+
+            <div class="results" id="sip-res">
+                <div class="res-divider"></div>
+                <div class="res-title"><span class="dot"></span>Investment Summary</div>
+                <div class="res-items">
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Total Invested</span><span
+                            class="rv c1" id="r-sip-inv">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c2"></span>Future Value</span><span
+                            class="rv c2" id="r-sip-fv">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c3"></span>Total Profit</span><span
+                            class="rv c3" id="r-sip-pr">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Profit %</span><span class="rv c1"
+                            id="r-sip-pct">—</span></div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <div class="chart-label">Invested vs Returns</div><canvas id="ch-sip-d"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-label">Growth Over Time</div><canvas id="ch-sip-l"></canvas>
+                    </div>
+                </div>
+
+                <!-- Inflation Results -->
+                <div id="sip-inflation-results" style="display:none">
+                    <div class="inflation-card" style="margin-top:16px">
+                        <div class="inf-label">📊 Inflation-Adjusted Analysis</div>
+                        <div class="res-items" style="margin-top:8px">
+                            <div class="res-item"><span class="rl"><span class="rd c2"></span>Nominal Value</span><span
+                                    class="rv c2" id="r-sip-nominal">—</span></div>
+                            <div class="res-item"><span class="rl"><span class="rd c3"></span>Real Value (Today's
+                                    ₹)</span><span class="rv c3" id="r-sip-real">—</span></div>
+                            <div class="res-item"><span class="rl"><span class="rd c5"></span>Purchasing Power
+                                    Loss</span><span class="rv c5" id="r-sip-loss">—</span></div>
+                        </div>
+                        <div class="inf-note" id="sip-inf-note"></div>
+                        <div class="chart-box" style="margin-top:12px">
+                            <div class="chart-label">Nominal vs Real Value</div><canvas id="ch-sip-inf"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scenario Simulator -->
+                <div id="sip-scenario-section" style="display:none;margin-top:20px">
+                    <div class="scenario-section">
+                        <div class="scenario-header">🔮 Scenario Simulator</div>
+                        <div class="scenario-tags">
+                            <div class="scenario-tag conservative">🛡️ Conservative 8%</div>
+                            <div class="scenario-tag moderate">⚖️ Moderate 12%</div>
+                            <div class="scenario-tag aggressive">🚀 Aggressive 15%</div>
+                        </div>
+                        <div class="chart-box full-width">
+                            <div class="chart-label">Scenario Comparison</div><canvas id="ch-sip-scenario"></canvas>
+                        </div>
+                        <table class="scenario-table">
+                            <thead>
+                                <tr>
+                                    <th>Scenario</th>
+                                    <th>Return</th>
+                                    <th>Invested</th>
+                                    <th>Final Value</th>
+                                    <th>Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scenario-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="share-row">
+                    <button class="share-btn" onclick="shareWA('sip')"><span class="s-icon">💬</span>WhatsApp</button>
+                    <button class="share-btn" onclick="shareTW('sip')"><span class="s-icon">🐦</span>Twitter</button>
+                    <button class="share-btn" onclick="copyLink()"><span class="s-icon">🔗</span>Copy Link</button>
+                    <button class="share-btn" onclick="exportCSV('sip')"><span class="s-icon">📊</span>CSV</button>
+                    <button class="share-btn" onclick="exportPDF()"><span class="s-icon">📄</span>PDF</button>
+                    <button class="share-btn" onclick="saveCalculation('sip')"><span
+                            class="s-icon">💾</span>Save</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="site-footer">
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
+    </footer>
+</body>
+
+</html>

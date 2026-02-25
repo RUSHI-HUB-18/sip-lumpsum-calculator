@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rushi Finance Tools — Smart Investment Calculators & Financial Planning</title>
+    <meta name="description"
+        content="Free professional financial calculators — SIP, Lumpsum, EMI, Goal Planner, Retirement, AI Investment Assistant. Plan your wealth with Rushi Finance Tools.">
+    <meta name="keywords"
+        content="SIP calculator, lumpsum calculator, EMI calculator, financial planning, investment tools, mutual fund, retirement planning">
+    <meta name="author" content="Rushi Sonar">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>Rushi Finance</a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="sip.html">SIP</a></li>
+                <li><a href="lumpsum.html">Lumpsum</a></li>
+                <li><a href="emi.html">EMI</a></li>
+                <li><a href="goal.html">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
+                <li><a href="ai.html">AI Assistant</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <div class="nav-right">
+                <button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button>
+                <button class="nav-auth-btn" id="nav-login-btn" onclick="showAuthModal('login')">Login</button>
+                <div class="user-menu" id="nav-user-menu" style="display:none">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">R</div>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div class="udh-name" id="ud-name">User</div>
+                            <div class="udh-email" id="ud-email">user@email.com</div>
+                        </div>
+                        <a href="dashboard.html">📊 My Dashboard</a>
+                        <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+                    </div>
+                </div>
+                <button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- AUTH MODAL -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="hideAuthModal()">✕</button>
+            <!-- Login Form -->
+            <div id="auth-login-form">
+                <div class="modal-title">Welcome Back 👋</div>
+                <div class="modal-sub">Login to save your calculations & goals</div>
+                <div class="fg"><label for="login-email">Email</label>
+                    <div class="input-w"><input type="email" id="login-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="login-pass">Password</label>
+                    <div class="input-w"><input type="password" id="login-pass" placeholder="••••••••"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doLogin()" style="flex:1">Login</button></div>
+                <div class="modal-switch">Don't have an account? <a onclick="switchAuthMode('signup')">Sign up</a>
+                </div>
+            </div>
+            <!-- Signup Form -->
+            <div id="auth-signup-form" style="display:none">
+                <div class="modal-title">Create Account 🚀</div>
+                <div class="modal-sub">Start saving your financial calculations</div>
+                <div class="fg"><label for="signup-name">Full Name</label>
+                    <div class="input-w"><input type="text" id="signup-name" placeholder="Rushi Sonar"></div>
+                </div>
+                <div class="fg"><label for="signup-email">Email</label>
+                    <div class="input-w"><input type="email" id="signup-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="signup-pass">Password</label>
+                    <div class="input-w"><input type="password" id="signup-pass" placeholder="Min 4 characters"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doSignup()" style="flex:1">Create
+                        Account</button></div>
+                <div class="modal-switch">Already have an account? <a onclick="switchAuthMode('login')">Login</a></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-badge">✨ Free Professional Finance Tools</div>
+        <h1>Plan Your Wealth with Rushi Finance Tools</h1>
+        <p>Professional-grade investment calculators, scenario simulators, and an AI-powered assistant — all in one
+            place. Build your financial future today.</p>
+        <div class="hero-actions">
+            <a href="sip.html" class="btn-primary">📈 Start Calculating</a>
+            <a href="ai.html" class="btn-outline">🤖 AI Assistant</a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat"><span class="stat-num">6+</span><span class="stat-label">Finance Tools</span></div>
+            <div class="hero-stat"><span class="stat-num">100%</span><span class="stat-label">Free & Accurate</span>
+            </div>
+            <div class="hero-stat"><span class="stat-num">AI</span><span class="stat-label">Smart Assistant</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- TOOLS GRID -->
+    <section class="tools-section">
+        <div class="section-title">📦 All Tools</div>
+        <div class="section-sub">Professional calculators for every financial need</div>
+        <div class="tools-grid">
+            <a href="sip.html" class="tool-card">
+                <div class="tc-icon g1">📈</div>
+                <div class="tc-title">SIP Calculator</div>
+                <div class="tc-desc">Calculate returns on systematic monthly investments with step-up and scenario
+                    simulation.</div>
+                <div class="tc-arrow">Calculate →</div>
+            </a>
+            <a href="lumpsum.html" class="tool-card">
+                <div class="tc-icon g2">💎</div>
+                <div class="tc-title">Lumpsum Calculator</div>
+                <div class="tc-desc">See how a one-time investment grows with compound interest over time.</div>
+                <div class="tc-arrow">Calculate →</div>
+            </a>
+            <a href="emi.html" class="tool-card">
+                <div class="tc-icon g4">🏦</div>
+                <div class="tc-title">EMI Calculator</div>
+                <div class="tc-desc">Plan your loan repayment — monthly EMI, interest breakdown & amortization.</div>
+                <div class="tc-arrow">Calculate →</div>
+            </a>
+            <a href="goal.html" class="tool-card">
+                <div class="tc-icon g3">🎯</div>
+                <div class="tc-title">Goal Planner</div>
+                <div class="tc-desc">Set a future goal and find out exactly how much SIP you need monthly.</div>
+                <div class="tc-arrow">Plan Now →</div>
+            </a>
+            <a href="retirement.html" class="tool-card">
+                <div class="tc-icon g5">🏖️</div>
+                <div class="tc-title">Retirement Planner</div>
+                <div class="tc-desc">Calculate your retirement corpus considering inflation and life expectancy.</div>
+                <div class="tc-arrow">Plan Now →</div>
+            </a>
+            <a href="ai.html" class="tool-card">
+                <div class="tc-icon g6">🤖</div>
+                <div class="tc-title">AI Investment Assistant</div>
+                <div class="tc-desc">Type your financial goal in plain English and get instant investment advice.</div>
+                <div class="tc-arrow">Ask AI →</div>
+            </a>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
+    </footer>
+</body>
+
+</html>

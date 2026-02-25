@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Planner — Reverse SIP Calculator | Rushi Finance Tools</title>
+    <meta name="description"
+        content="Set a financial goal and find out exactly how much SIP you need to invest monthly with step-up support and growth projections.">
+    <meta name="keywords"
+        content="goal planner, investment goal, SIP required, financial planning, target calculator, reverse SIP">
+    <meta name="author" content="Rushi Sonar">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner"><a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>Rushi Finance</a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="sip.html">SIP</a></li>
+                <li><a href="lumpsum.html">Lumpsum</a></li>
+                <li><a href="emi.html">EMI</a></li>
+                <li><a href="goal.html" class="active">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
+                <li><a href="ai.html">AI Assistant</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <div class="nav-right"><button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button><button class="nav-auth-btn" id="nav-login-btn"
+                    onclick="showAuthModal('login')">Login</button>
+                <div class="user-menu" id="nav-user-menu" style="display:none">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">R</div>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div class="udh-name" id="ud-name">User</div>
+                            <div class="udh-email" id="ud-email">user@email.com</div>
+                        </div><a href="dashboard.html">📊 My Dashboard</a><button class="logout-btn"
+                            onclick="doLogout()">🚪 Logout</button>
+                    </div>
+                </div><button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-card"><button class="modal-close" onclick="hideAuthModal()">✕</button>
+            <div id="auth-login-form">
+                <div class="modal-title">Welcome Back 👋</div>
+                <div class="modal-sub">Login to save your calculations</div>
+                <div class="fg"><label for="login-email">Email</label>
+                    <div class="input-w"><input type="email" id="login-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="login-pass">Password</label>
+                    <div class="input-w"><input type="password" id="login-pass" placeholder="••••••••"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doLogin()" style="flex:1">Login</button></div>
+                <div class="modal-switch">Don't have an account? <a onclick="switchAuthMode('signup')">Sign up</a></div>
+            </div>
+            <div id="auth-signup-form" style="display:none">
+                <div class="modal-title">Create Account 🚀</div>
+                <div class="modal-sub">Start saving your calculations</div>
+                <div class="fg"><label for="signup-name">Full Name</label>
+                    <div class="input-w"><input type="text" id="signup-name" placeholder="Rushi Sonar"></div>
+                </div>
+                <div class="fg"><label for="signup-email">Email</label>
+                    <div class="input-w"><input type="email" id="signup-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="signup-pass">Password</label>
+                    <div class="input-w"><input type="password" id="signup-pass" placeholder="Min 4 characters"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doSignup()" style="flex:1">Create
+                        Account</button></div>
+                <div class="modal-switch">Already have an account? <a onclick="switchAuthMode('login')">Login</a></div>
+            </div>
+        </div>
+    </div>
+
+    <main class="page-wrap">
+        <div class="page-head">
+            <span class="icon">🎯</span>
+            <h1>Goal Planner</h1>
+            <p>Set a target amount and find how much you need to invest monthly — with optional yearly step-up</p>
+        </div>
+        <div class="card">
+            <div class="fg"><label for="goal-amt">Target Amount (Future Goal)</label>
+                <div class="input-w"><span class="pfx">₹</span><input type="number" id="goal-amt" class="has-pfx"
+                        placeholder="e.g. 1,00,00,000"></div>
+                <div class="err-msg" id="e-goal-amt"></div>
+            </div>
+            <div class="fg"><label for="goal-rate">Expected Annual Return</label>
+                <div class="input-w"><input type="number" id="goal-rate" class="has-sfx" placeholder="e.g. 12"
+                        step="0.1"><span class="sfx">% p.a.</span></div>
+                <div class="err-msg" id="e-goal-rate"></div>
+            </div>
+            <div class="fg"><label for="goal-yrs">Time Duration</label>
+                <div class="input-w"><input type="number" id="goal-yrs" class="has-sfx" placeholder="e.g. 20"><span
+                        class="sfx">Years</span></div>
+                <div class="err-msg" id="e-goal-yrs"></div>
+            </div>
+            <div class="fg"><label for="goal-su">Yearly Step-up (Optional)</label>
+                <div class="input-w"><input type="number" id="goal-su" class="has-sfx" placeholder="e.g. 10" step="0.5"
+                        value="0"><span class="sfx">%</span></div>
+                <div class="form-hint">Increase your SIP amount by this % every year</div>
+            </div>
+            <div class="btn-row"><button class="btn btn-go" onclick="calcGoal()">Plan My Goal</button><button
+                    class="btn btn-rst" onclick="rstGoal()">Reset</button></div>
+
+            <div class="results" id="goal-res">
+                <div class="res-divider"></div>
+                <div class="res-title"><span class="dot"></span>Your Investment Plan</div>
+                <div class="res-items">
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Monthly SIP Needed</span><span
+                            class="rv c1" id="r-goal-sip">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c2"></span>Or Lumpsum Today</span><span
+                            class="rv c2" id="r-goal-ls">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c3"></span>Total You'll Invest
+                            (SIP)</span><span class="rv c3" id="r-goal-inv">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c6"></span>Market Returns</span><span
+                            class="rv c6" id="r-goal-ret">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Profit</span><span class="rv c1"
+                            id="r-goal-profit">—</span></div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <div class="chart-label">Investment Breakdown</div><canvas id="ch-goal-d"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-label">Path to Goal</div><canvas id="ch-goal-l"></canvas>
+                    </div>
+                </div>
+                <div class="share-row">
+                    <button class="share-btn" onclick="copyLink()"><span class="s-icon">🔗</span>Copy Link</button>
+                    <button class="share-btn" onclick="exportPDF()"><span class="s-icon">📄</span>PDF</button>
+                    <button class="share-btn" onclick="saveCalculation('goal')"><span
+                            class="s-icon">💾</span>Save</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="site-footer">
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
+    </footer>
+</body>
+
+</html>

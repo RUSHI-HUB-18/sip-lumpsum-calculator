@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EMI Calculator — Loan Repayment Planner | FinCalc</title>
+    <title>EMI Calculator — Loan Repayment Planner | Rushi Finance Tools</title>
     <meta name="description"
         content="Calculate monthly EMI, total interest and payment breakdown for home, car and personal loans.">
     <meta name="keywords" content="EMI calculator, loan calculator, home loan, car loan, monthly installment">
@@ -19,22 +19,66 @@
 
 <body>
     <nav class="navbar">
-        <div class="nav-inner">
-            <a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>FinCalc</a>
+        <div class="nav-inner"><a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>Rushi Finance</a>
             <ul class="nav-links" id="nav-links">
-                <li><a href="index.html">SIP</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="sip.html">SIP</a></li>
                 <li><a href="lumpsum.html">Lumpsum</a></li>
                 <li><a href="emi.html" class="active">EMI</a></li>
                 <li><a href="goal.html">Goal Planner</a></li>
                 <li><a href="retirement.html">Retirement</a></li>
+                <li><a href="ai.html">AI Assistant</a></li>
+                <li><a href="about.html">About</a></li>
             </ul>
-            <div class="nav-right">
-                <button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
-                        class="theme-icon">☀️</span></button>
-                <button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
+            <div class="nav-right"><button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button><button class="nav-auth-btn" id="nav-login-btn"
+                    onclick="showAuthModal('login')">Login</button>
+                <div class="user-menu" id="nav-user-menu" style="display:none">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">R</div>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div class="udh-name" id="ud-name">User</div>
+                            <div class="udh-email" id="ud-email">user@email.com</div>
+                        </div><a href="dashboard.html">📊 My Dashboard</a><button class="logout-btn"
+                            onclick="doLogout()">🚪 Logout</button>
+                    </div>
+                </div><button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
             </div>
         </div>
     </nav>
+
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-card"><button class="modal-close" onclick="hideAuthModal()">✕</button>
+            <div id="auth-login-form">
+                <div class="modal-title">Welcome Back 👋</div>
+                <div class="modal-sub">Login to save your calculations</div>
+                <div class="fg"><label for="login-email">Email</label>
+                    <div class="input-w"><input type="email" id="login-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="login-pass">Password</label>
+                    <div class="input-w"><input type="password" id="login-pass" placeholder="••••••••"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doLogin()" style="flex:1">Login</button></div>
+                <div class="modal-switch">Don't have an account? <a onclick="switchAuthMode('signup')">Sign up</a></div>
+            </div>
+            <div id="auth-signup-form" style="display:none">
+                <div class="modal-title">Create Account 🚀</div>
+                <div class="modal-sub">Start saving your calculations</div>
+                <div class="fg"><label for="signup-name">Full Name</label>
+                    <div class="input-w"><input type="text" id="signup-name" placeholder="Rushi Sonar"></div>
+                </div>
+                <div class="fg"><label for="signup-email">Email</label>
+                    <div class="input-w"><input type="email" id="signup-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="signup-pass">Password</label>
+                    <div class="input-w"><input type="password" id="signup-pass" placeholder="Min 4 characters"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doSignup()" style="flex:1">Create
+                        Account</button></div>
+                <div class="modal-switch">Already have an account? <a onclick="switchAuthMode('login')">Login</a></div>
+            </div>
+        </div>
+    </div>
 
     <main class="page-wrap">
         <div class="page-head">
@@ -90,6 +134,8 @@
                     <button class="share-btn" onclick="copyLink()"><span class="s-icon">🔗</span>Copy Link</button>
                     <button class="share-btn" onclick="exportCSV('emi')"><span class="s-icon">📊</span>CSV</button>
                     <button class="share-btn" onclick="exportPDF()"><span class="s-icon">📄</span>PDF</button>
+                    <button class="share-btn" onclick="saveCalculation('emi')"><span
+                            class="s-icon">💾</span>Save</button>
                 </div>
             </div>
         </div>

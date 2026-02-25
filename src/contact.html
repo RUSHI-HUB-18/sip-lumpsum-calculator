@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact — Get in Touch | Rushi Finance Tools</title>
+    <meta name="description"
+        content="Have feedback or want to connect? Reach out to Rushi Sonar, the creator of Rushi Finance Tools.">
+    <meta name="keywords" content="contact, feedback, Rushi Sonar, financial tools">
+    <meta name="author" content="Rushi Sonar">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner"><a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>Rushi Finance</a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="sip.html">SIP</a></li>
+                <li><a href="lumpsum.html">Lumpsum</a></li>
+                <li><a href="emi.html">EMI</a></li>
+                <li><a href="goal.html">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
+                <li><a href="ai.html">AI Assistant</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <div class="nav-right"><button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button><button class="nav-auth-btn" id="nav-login-btn"
+                    onclick="showAuthModal('login')">Login</button>
+                <div class="user-menu" id="nav-user-menu" style="display:none">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">R</div>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div class="udh-name" id="ud-name">User</div>
+                            <div class="udh-email" id="ud-email">user@email.com</div>
+                        </div><a href="dashboard.html">📊 My Dashboard</a><button class="logout-btn"
+                            onclick="doLogout()">🚪 Logout</button>
+                    </div>
+                </div><button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-card"><button class="modal-close" onclick="hideAuthModal()">✕</button>
+            <div id="auth-login-form">
+                <div class="modal-title">Welcome Back 👋</div>
+                <div class="modal-sub">Login to save your calculations</div>
+                <div class="fg"><label for="login-email">Email</label>
+                    <div class="input-w"><input type="email" id="login-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="login-pass">Password</label>
+                    <div class="input-w"><input type="password" id="login-pass" placeholder="••••••••"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doLogin()" style="flex:1">Login</button></div>
+                <div class="modal-switch">Don't have an account? <a onclick="switchAuthMode('signup')">Sign up</a></div>
+            </div>
+            <div id="auth-signup-form" style="display:none">
+                <div class="modal-title">Create Account 🚀</div>
+                <div class="modal-sub">Start saving your calculations</div>
+                <div class="fg"><label for="signup-name">Full Name</label>
+                    <div class="input-w"><input type="text" id="signup-name" placeholder="Rushi Sonar"></div>
+                </div>
+                <div class="fg"><label for="signup-email">Email</label>
+                    <div class="input-w"><input type="email" id="signup-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="signup-pass">Password</label>
+                    <div class="input-w"><input type="password" id="signup-pass" placeholder="Min 4 characters"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doSignup()" style="flex:1">Create
+                        Account</button></div>
+                <div class="modal-switch">Already have an account? <a onclick="switchAuthMode('login')">Login</a></div>
+            </div>
+        </div>
+    </div>
+
+    <main class="page-wrap wide">
+        <div class="page-head">
+            <span class="icon">📬</span>
+            <h1>Contact</h1>
+            <p>Have feedback, questions, or want to collaborate? I'd love to hear from you!</p>
+        </div>
+
+        <div class="contact-grid">
+            <div class="contact-info-card">
+                <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">Get in Touch</h3>
+                <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">Feel free to reach out through any of
+                    these channels.</p>
+
+                <div class="contact-info-item">
+                    <div class="cii-icon">👨‍💻</div>
+                    <div>
+                        <div class="cii-title">Developer</div>
+                        <div class="cii-value">Rushi Sonar</div>
+                    </div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="cii-icon">🐙</div>
+                    <div>
+                        <div class="cii-title">GitHub</div>
+                        <div class="cii-value"><a href="https://github.com/RUSHI-HUB-18" target="_blank"
+                                style="color:var(--green)">github.com/RUSHI-HUB-18</a></div>
+                    </div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="cii-icon">📍</div>
+                    <div>
+                        <div class="cii-title">Location</div>
+                        <div class="cii-value">India 🇮🇳</div>
+                    </div>
+                </div>
+                <div class="contact-info-item">
+                    <div class="cii-icon">💡</div>
+                    <div>
+                        <div class="cii-title">Project</div>
+                        <div class="cii-value">Rushi Finance Tools — Open Source</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-form-card">
+                <h3 style="font-size:16px;font-weight:700;margin-bottom:12px">Send a Message</h3>
+                <div class="fg"><label for="contact-name">Your Name</label>
+                    <div class="input-w"><input type="text" id="contact-name" placeholder="Enter your name"></div>
+                </div>
+                <div class="fg"><label for="contact-email">Email Address</label>
+                    <div class="input-w"><input type="email" id="contact-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="contact-msg">Message</label>
+                    <div class="input-w"><textarea id="contact-msg"
+                            placeholder="Your feedback, question or idea..."></textarea></div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-go" onclick="sendContactForm()" style="flex:1">Send Message</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="site-footer">
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
+    </footer>
+
+    <script>
+        function sendContactForm() {
+            const name = document.getElementById('contact-name').value.trim();
+            const email = document.getElementById('contact-email').value.trim();
+            const msg = document.getElementById('contact-msg').value.trim();
+            if (!name || !email || !msg) { showToast('Please fill all fields', '⚠️'); return; }
+            // Store in localStorage as a demo
+            const contacts = JSON.parse(localStorage.getItem('rushi_contacts') || '[]');
+            contacts.push({ name, email, msg, date: Date.now() });
+            localStorage.setItem('rushi_contacts', JSON.stringify(contacts));
+            document.getElementById('contact-name').value = '';
+            document.getElementById('contact-email').value = '';
+            document.getElementById('contact-msg').value = '';
+            showToast('Message sent! Thank you 🎉');
+        }
+    </script>
+</body>
+
+</html>

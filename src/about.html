@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — Rushi Finance Tools | Free Financial Calculators</title>
+    <meta name="description"
+        content="Learn about Rushi Finance Tools — free, professional financial calculators built by Rushi Sonar for everyone.">
+    <meta name="keywords" content="about, Rushi Sonar, financial tools, investment calculators">
+    <meta name="author" content="Rushi Sonar">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner"><a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>Rushi Finance</a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="sip.html">SIP</a></li>
+                <li><a href="lumpsum.html">Lumpsum</a></li>
+                <li><a href="emi.html">EMI</a></li>
+                <li><a href="goal.html">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
+                <li><a href="ai.html">AI Assistant</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+            </ul>
+            <div class="nav-right"><button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button><button class="nav-auth-btn" id="nav-login-btn"
+                    onclick="showAuthModal('login')">Login</button>
+                <div class="user-menu" id="nav-user-menu" style="display:none">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">R</div>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div class="udh-name" id="ud-name">User</div>
+                            <div class="udh-email" id="ud-email">user@email.com</div>
+                        </div><a href="dashboard.html">📊 My Dashboard</a><button class="logout-btn"
+                            onclick="doLogout()">🚪 Logout</button>
+                    </div>
+                </div><button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-card"><button class="modal-close" onclick="hideAuthModal()">✕</button>
+            <div id="auth-login-form">
+                <div class="modal-title">Welcome Back 👋</div>
+                <div class="modal-sub">Login to save your calculations</div>
+                <div class="fg"><label for="login-email">Email</label>
+                    <div class="input-w"><input type="email" id="login-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="login-pass">Password</label>
+                    <div class="input-w"><input type="password" id="login-pass" placeholder="••••••••"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doLogin()" style="flex:1">Login</button></div>
+                <div class="modal-switch">Don't have an account? <a onclick="switchAuthMode('signup')">Sign up</a></div>
+            </div>
+            <div id="auth-signup-form" style="display:none">
+                <div class="modal-title">Create Account 🚀</div>
+                <div class="modal-sub">Start saving your calculations</div>
+                <div class="fg"><label for="signup-name">Full Name</label>
+                    <div class="input-w"><input type="text" id="signup-name" placeholder="Rushi Sonar"></div>
+                </div>
+                <div class="fg"><label for="signup-email">Email</label>
+                    <div class="input-w"><input type="email" id="signup-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="signup-pass">Password</label>
+                    <div class="input-w"><input type="password" id="signup-pass" placeholder="Min 4 characters"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doSignup()" style="flex:1">Create
+                        Account</button></div>
+                <div class="modal-switch">Already have an account? <a onclick="switchAuthMode('login')">Login</a></div>
+            </div>
+        </div>
+    </div>
+
+    <main class="page-wrap wide">
+        <div class="page-head">
+            <span class="icon">💡</span>
+            <h1>About Rushi Finance Tools</h1>
+            <p>Professional-grade financial calculators, built with care for everyone</p>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+            <h2 style="font-size:18px;font-weight:700;margin-bottom:12px">Our Mission</h2>
+            <p style="color:var(--text-2);font-size:14px;line-height:1.8">
+                Rushi Finance Tools was created with a simple goal — to make professional-grade financial planning
+                accessible to everyone.
+                Whether you're planning your first SIP, calculating EMI for a home loan, or preparing for retirement,
+                our tools give you
+                accurate, visual, and easy-to-understand results.
+            </p>
+            <p style="color:var(--text-2);font-size:14px;line-height:1.8;margin-top:12px">
+                All calculations use industry-standard financial formulas. The platform is 100% free, runs entirely in
+                your browser,
+                and never sends your data to any server. Your privacy and data security are our top priorities.
+            </p>
+        </div>
+
+        <div class="about-grid">
+            <div class="about-card">
+                <span class="ac-icon">📈</span>
+                <div class="ac-title">Accurate Calculations</div>
+                <div class="ac-desc">All formulas follow RBI and SEBI standards. SIP, Lumpsum, EMI — every result is
+                    financially precise.</div>
+            </div>
+            <div class="about-card">
+                <span class="ac-icon">🔒</span>
+                <div class="ac-title">100% Private</div>
+                <div class="ac-desc">All data stays in your browser's localStorage. No server, no tracking, no data
+                    collection.</div>
+            </div>
+            <div class="about-card">
+                <span class="ac-icon">📱</span>
+                <div class="ac-title">Mobile-First Design</div>
+                <div class="ac-desc">Optimized for phones, tablets, and desktops. Beautiful UI with dark mode support.
+                </div>
+            </div>
+            <div class="about-card">
+                <span class="ac-icon">🤖</span>
+                <div class="ac-title">AI-Powered</div>
+                <div class="ac-desc">Natural language investment assistant. Just type your goal and get instant results.
+                </div>
+            </div>
+            <div class="about-card">
+                <span class="ac-icon">📊</span>
+                <div class="ac-title">Visual Charts</div>
+                <div class="ac-desc">Interactive doughnut and line charts powered by Chart.js for clear wealth
+                    visualization.</div>
+            </div>
+            <div class="about-card">
+                <span class="ac-icon">💾</span>
+                <div class="ac-title">Save & Export</div>
+                <div class="ac-desc">Save calculations to your account, export as CSV, share on WhatsApp & Twitter.
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:20px;text-align:center">
+            <h2 style="font-size:18px;font-weight:700;margin-bottom:8px">Built by Rushi Sonar</h2>
+            <p style="color:var(--text-2);font-size:14px;line-height:1.8;margin-bottom:16px">
+                A passionate developer building tools that make financial literacy accessible and engaging.
+            </p>
+            <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+                <a href="https://github.com/RUSHI-HUB-18" target="_blank" class="btn-outline">🐙 GitHub</a>
+                <a href="contact.html" class="btn-primary">📬 Contact Me</a>
+            </div>
+        </div>
+    </main>
+    <footer class="site-footer">
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
+    </footer>
+</body>
+
+</html>
