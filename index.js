@@ -1,279 +1,341 @@
-let currentMode = 'both';
-let currentCalc = 'investment';
-
-// ===== MAIN TAB SWITCH =====
-function switchCalculator(type) {
-    currentCalc = type;
-    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('main-tab-' + type).classList.add('active');
-
-    document.querySelectorAll('.calc-section').forEach(s => s.classList.remove('active'));
-    document.getElementById('section-' + type).classList.add('active');
-}
-
-// ===== INVESTMENT MODE TABS =====
-function setMode(mode) {
-    currentMode = mode;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab-' + mode).classList.add('active');
-
-    const stepupGroup = document.getElementById('stepup-group');
-    const amountLabel = document.getElementById('amount-label');
-
-    if (mode === 'lumpsum') {
-        stepupGroup.style.display = 'none';
-        amountLabel.textContent = 'Lumpsum Amount';
-    } else if (mode === 'sip') {
-        stepupGroup.style.display = 'block';
-        amountLabel.textContent = 'Monthly SIP Amount';
+// ===== THEME MANAGEMENT =====
+function initTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
     } else {
-        stepupGroup.style.display = 'block';
-        amountLabel.textContent = 'Monthly SIP / Lumpsum Amount';
+        // Default to light
+        document.documentElement.setAttribute('data-theme', 'light');
     }
-
-    if (document.getElementById('results').classList.contains('visible')) {
-        calculate();
-    }
+    updateToggleIcon();
 }
 
-// ===== FORMAT CURRENCY (Indian) =====
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateToggleIcon();
+
+    // Redraw charts if visible
+    redrawVisibleCharts();
+}
+
+function updateToggleIcon() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const icon = document.getElementById('toggle-icon');
+    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+}
+
+// ===== MOBILE NAV =====
+function toggleNav() {
+    const links = document.getElementById('nav-links');
+    links.classList.toggle('open');
+}
+
+// Close nav when clicking a link (mobile)
+document.addEventListener('click', (e) => {
+    const links = document.getElementById('nav-links');
+    const hamburger = document.querySelector('.nav-hamburger');
+    if (links && !links.contains(e.target) && !hamburger?.contains(e.target)) {
+        links.classList.remove('open');
+    }
+});
+
+// ===== FORMAT CURRENCY (Indian System) =====
 function formatCurrency(num) {
-    const formatted = num.toFixed(0);
+    const isNeg = num < 0;
+    num = Math.abs(Math.round(num));
+    let str = num.toString();
     let result = '';
-    const parts = formatted.split('.');
-    let intPart = parts[0];
-    const isNegative = intPart.startsWith('-');
-    if (isNegative) intPart = intPart.substring(1);
 
-    if (intPart.length > 3) {
-        result = intPart.substring(intPart.length - 3);
-        intPart = intPart.substring(0, intPart.length - 3);
-        while (intPart.length > 2) {
-            result = intPart.substring(intPart.length - 2) + ',' + result;
-            intPart = intPart.substring(0, intPart.length - 2);
+    if (str.length > 3) {
+        result = str.substring(str.length - 3);
+        str = str.substring(0, str.length - 3);
+        while (str.length > 2) {
+            result = str.substring(str.length - 2) + ',' + result;
+            str = str.substring(0, str.length - 2);
         }
-        result = intPart + ',' + result;
+        result = str + ',' + result;
     } else {
-        result = intPart;
+        result = str;
     }
 
-    return (isNegative ? '-' : '') + '₹' + result;
+    return (isNeg ? '-' : '') + '₹' + result;
 }
 
 function formatShort(num) {
     if (num >= 10000000) return '₹' + (num / 10000000).toFixed(1) + ' Cr';
     if (num >= 100000) return '₹' + (num / 100000).toFixed(1) + ' L';
     if (num >= 1000) return '₹' + (num / 1000).toFixed(1) + 'K';
-    return '₹' + num.toFixed(0);
+    return '₹' + Math.round(num);
 }
 
-// ===== PIE CHART DRAWING =====
-function drawPieChart(canvasId, segments, centerValue) {
+// ===== INPUT VALIDATION =====
+function validateInput(inputId, errorId) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    const val = parseFloat(input.value);
+
+    if (input.value.trim() === '' || isNaN(val)) {
+        input.classList.add('error');
+        error.textContent = 'Please enter a valid number';
+        error.classList.add('visible');
+        return false;
+    }
+
+    if (val <= 0) {
+        input.classList.add('error');
+        error.textContent = 'Value must be greater than 0';
+        error.classList.add('visible');
+        return false;
+    }
+
+    input.classList.remove('error');
+    error.classList.remove('visible');
+    return true;
+}
+
+function clearValidation(inputId, errorId) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    if (input) input.classList.remove('error');
+    if (error) error.classList.remove('visible');
+}
+
+// ===== DOUGHNUT CHART =====
+function drawDoughnut(canvasId, segments) {
     const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.min(width, height) / 2 - 10;
-    const innerRadius = radius * 0.6;
+    const dpr = window.devicePixelRatio || 1;
+    const size = 280;
 
-    ctx.clearRect(0, 0, width, height);
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size / 2 + 'px';
+    canvas.style.height = size / 2 + 'px';
+    ctx.scale(dpr, dpr);
 
-    const total = segments.reduce((sum, s) => sum + s.value, 0);
+    const w = size / 2;
+    const cx = w / 2;
+    const cy = w / 2;
+    const outerR = w / 2 - 4;
+    const innerR = outerR * 0.62;
+    const total = segments.reduce((s, seg) => s + seg.value, 0);
+    const gap = 0.04;
+
+    ctx.clearRect(0, 0, w, w);
+
     let startAngle = -Math.PI / 2;
 
-    segments.forEach((segment, i) => {
-        const sliceAngle = (segment.value / total) * 2 * Math.PI;
-        const endAngle = startAngle + sliceAngle;
+    segments.forEach(seg => {
+        const slice = (seg.value / total) * (2 * Math.PI - gap * segments.length);
+        const endAngle = startAngle + slice;
 
-        // Draw slice
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-        ctx.arc(centerX, centerY, innerRadius, endAngle, startAngle, true);
+        ctx.arc(cx, cy, outerR, startAngle, endAngle);
+        ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
         ctx.closePath();
-        ctx.fillStyle = segment.color;
+        ctx.fillStyle = seg.color;
         ctx.fill();
 
-        // Gap between segments
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, endAngle - 0.02, endAngle + 0.02);
-        ctx.arc(centerX, centerY, innerRadius, endAngle + 0.02, endAngle - 0.02, true);
-        ctx.closePath();
-        ctx.fillStyle = '#050d0a';
-        ctx.fill();
-
-        startAngle = endAngle;
+        startAngle = endAngle + gap;
     });
 }
 
-function updateChartLegend(legendId, segments) {
-    const legend = document.getElementById(legendId);
-    const total = segments.reduce((sum, s) => sum + s.value, 0);
+function updateLegend(legendId, segments) {
+    const el = document.getElementById(legendId);
+    if (!el) return;
+    const total = segments.reduce((s, seg) => s + seg.value, 0);
 
-    legend.innerHTML = segments.map(s => {
+    el.innerHTML = segments.map(s => {
         const pct = ((s.value / total) * 100).toFixed(1);
         return `
-            <div class="legend-item">
-                <div class="legend-color" style="background:${s.color}"></div>
-                <div class="legend-info">
-                    <span class="legend-label">${s.label}</span>
-                    <span class="legend-value">${formatCurrency(s.value)}<span class="legend-pct">(${pct}%)</span></span>
+            <div class="legend-row">
+                <div class="l-color" style="background:${s.color}"></div>
+                <div class="l-info">
+                    <span class="l-name">${s.label}</span>
+                    <span class="l-val">${formatCurrency(s.value)}<span class="l-pct">(${pct}%)</span></span>
                 </div>
-            </div>
-        `;
+            </div>`;
     }).join('');
 }
 
-// ===== INVESTMENT CALCULATOR =====
-function calculate() {
-    const amount = parseFloat(document.getElementById('amount').value);
-    const rate = parseFloat(document.getElementById('rate').value) / 100;
-    const years = parseFloat(document.getElementById('years').value);
-    const stepup = parseFloat(document.getElementById('stepup').value || 0) / 100;
+// ===== SIP CALCULATOR =====
+function calculateSIP() {
+    // Validate
+    const fields = [
+        ['sip-amount', 'err-sip-amount'],
+        ['sip-rate', 'err-sip-rate'],
+        ['sip-years', 'err-sip-years']
+    ];
 
-    if (isNaN(amount) || isNaN(rate) || isNaN(years) || amount <= 0 || rate <= 0 || years <= 0) return;
+    let valid = true;
+    fields.forEach(([inp, err]) => {
+        if (!validateInput(inp, err)) valid = false;
+    });
 
+    // Step-up is optional, validate only if filled
+    const stepupVal = document.getElementById('sip-stepup')?.value;
+    if (stepupVal && parseFloat(stepupVal) < 0) {
+        document.getElementById('sip-stepup').classList.add('error');
+        document.getElementById('err-sip-stepup').textContent = 'Cannot be negative';
+        document.getElementById('err-sip-stepup').classList.add('visible');
+        valid = false;
+    }
+
+    if (!valid) return;
+
+    const amount = parseFloat(document.getElementById('sip-amount').value);
+    const rate = parseFloat(document.getElementById('sip-rate').value) / 100;
+    const years = parseFloat(document.getElementById('sip-years').value);
+    const stepup = parseFloat(document.getElementById('sip-stepup')?.value || 0) / 100;
     const monthlyRate = rate / 12;
 
-    // Lumpsum
-    const lumpsumFV = amount * Math.pow((1 + rate), years);
-    const lumpsumProfit = lumpsumFV - amount;
-
-    // SIP with Step-up
     let sipFV = 0, totalInvested = 0, currentSIP = amount;
 
     for (let y = 0; y < years; y++) {
         for (let m = 0; m < 12; m++) {
-            let monthsLeft = (years - y) * 12 - m;
-            sipFV += currentSIP * Math.pow((1 + monthlyRate), monthsLeft);
+            const monthsLeft = (years - y) * 12 - m;
+            sipFV += currentSIP * Math.pow(1 + monthlyRate, monthsLeft);
             totalInvested += currentSIP;
         }
         currentSIP *= (1 + stepup);
     }
 
-    const sipProfit = sipFV - totalInvested;
+    const profit = sipFV - totalInvested;
+    const profitPct = ((profit / totalInvested) * 100).toFixed(1);
+
+    // Update UI
+    document.getElementById('res-sip-invested').textContent = formatCurrency(totalInvested);
+    document.getElementById('res-sip-value').textContent = formatCurrency(sipFV);
+    document.getElementById('res-sip-profit').textContent = formatCurrency(profit);
+    document.getElementById('res-sip-pct').textContent = '+' + profitPct + '%';
+
+    // Chart
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const segments = [
+        { label: 'Invested', value: totalInvested, color: isDark ? '#00d4a0' : '#00b386' },
+        { label: 'Returns', value: profit, color: isDark ? '#7c85ff' : '#5b6cff' }
+    ];
+    drawDoughnut('sip-chart', segments);
+    document.getElementById('sip-chart-total').textContent = formatShort(sipFV);
+    updateLegend('sip-legend', segments);
 
     // Show results
-    const resultsEl = document.getElementById('results');
-    resultsEl.classList.remove('visible');
-    void resultsEl.offsetWidth;
-    resultsEl.classList.add('visible');
-
-    // Lumpsum section
-    const lsSection = document.getElementById('lumpsum-results');
-    const lsTitle = document.getElementById('lumpsum-title');
-    if (currentMode === 'sip') {
-        lsSection.style.display = 'none';
-    } else {
-        lsSection.style.display = 'block';
-        lsTitle.style.display = currentMode === 'lumpsum' ? 'none' : 'block';
-        document.getElementById('ls-invested').textContent = formatCurrency(amount);
-        document.getElementById('ls-value').textContent = formatCurrency(lumpsumFV);
-        document.getElementById('ls-profit').textContent = formatCurrency(lumpsumProfit);
-
-        // Lumpsum Pie Chart
-        const lsSegments = [
-            { label: 'Invested', value: amount, color: '#10b981' },
-            { label: 'Returns', value: lumpsumProfit, color: '#22d3ee' }
-        ];
-        drawPieChart('ls-pie-chart', lsSegments);
-        document.getElementById('ls-chart-total').textContent = formatShort(lumpsumFV);
-        updateChartLegend('ls-chart-legend', lsSegments);
-    }
-
-    // SIP section
-    const sipSection = document.getElementById('sip-results');
-    const sipTitle = document.getElementById('sip-title');
-    if (currentMode === 'lumpsum') {
-        sipSection.style.display = 'none';
-    } else {
-        sipSection.style.display = 'block';
-        sipTitle.style.display = currentMode === 'sip' ? 'none' : 'block';
-        document.getElementById('sip-invested').textContent = formatCurrency(totalInvested);
-        document.getElementById('sip-value').textContent = formatCurrency(sipFV);
-        document.getElementById('sip-profit').textContent = formatCurrency(sipProfit);
-
-        // SIP Pie Chart
-        const sipSegments = [
-            { label: 'Invested', value: totalInvested, color: '#10b981' },
-            { label: 'Returns', value: sipProfit, color: '#22d3ee' }
-        ];
-        drawPieChart('sip-pie-chart', sipSegments);
-        document.getElementById('sip-chart-total').textContent = formatShort(sipFV);
-        updateChartLegend('sip-chart-legend', sipSegments);
-
-        // Growth metrics
-        const multiplier = (sipFV / totalInvested).toFixed(2);
-        const growthPct = ((sipFV / totalInvested - 1) * 100).toFixed(1);
-        document.getElementById('multiplier').textContent = multiplier + 'x';
-        document.getElementById('growth-pct').textContent = '+' + growthPct + '% returns';
-
-        const progressPct = Math.min((sipProfit / sipFV) * 100, 95);
-        setTimeout(() => {
-            document.getElementById('progress-bar').style.width = progressPct + '%';
-        }, 100);
-    }
+    const results = document.getElementById('sip-results');
+    results.classList.remove('visible');
+    void results.offsetWidth;
+    results.classList.add('visible');
 }
 
-// ===== EMI CALCULATOR =====
-function calculateEMI() {
-    const loan = parseFloat(document.getElementById('emi-loan').value);
-    const rate = parseFloat(document.getElementById('emi-rate').value) / 100 / 12;
-    const tenureYears = parseFloat(document.getElementById('emi-tenure').value);
-    const tenure = tenureYears * 12;
+function resetSIP() {
+    ['sip-amount', 'sip-rate', 'sip-years', 'sip-stepup'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.value = ''; el.classList.remove('error'); }
+    });
+    ['err-sip-amount', 'err-sip-rate', 'err-sip-years', 'err-sip-stepup'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('visible');
+    });
+    document.getElementById('sip-results')?.classList.remove('visible');
+}
 
-    if (isNaN(loan) || isNaN(rate) || isNaN(tenure) || loan <= 0 || rate <= 0 || tenure <= 0) return;
+// ===== LUMPSUM CALCULATOR =====
+function calculateLumpsum() {
+    const fields = [
+        ['ls-amount', 'err-ls-amount'],
+        ['ls-rate', 'err-ls-rate'],
+        ['ls-years', 'err-ls-years']
+    ];
 
-    // EMI = P × r × (1+r)^n / ((1+r)^n - 1)
-    const emi = loan * rate * Math.pow(1 + rate, tenure) / (Math.pow(1 + rate, tenure) - 1);
-    const totalPayment = emi * tenure;
-    const totalInterest = totalPayment - loan;
+    let valid = true;
+    fields.forEach(([inp, err]) => {
+        if (!validateInput(inp, err)) valid = false;
+    });
+    if (!valid) return;
+
+    const amount = parseFloat(document.getElementById('ls-amount').value);
+    const rate = parseFloat(document.getElementById('ls-rate').value) / 100;
+    const years = parseFloat(document.getElementById('ls-years').value);
+
+    const futureValue = amount * Math.pow(1 + rate, years);
+    const profit = futureValue - amount;
+    const profitPct = ((profit / amount) * 100).toFixed(1);
+
+    // Update UI
+    document.getElementById('res-ls-invested').textContent = formatCurrency(amount);
+    document.getElementById('res-ls-value').textContent = formatCurrency(futureValue);
+    document.getElementById('res-ls-profit').textContent = formatCurrency(profit);
+    document.getElementById('res-ls-pct').textContent = '+' + profitPct + '%';
+
+    // Chart
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const segments = [
+        { label: 'Invested', value: amount, color: isDark ? '#00d4a0' : '#00b386' },
+        { label: 'Returns', value: profit, color: isDark ? '#7c85ff' : '#5b6cff' }
+    ];
+    drawDoughnut('ls-chart', segments);
+    document.getElementById('ls-chart-total').textContent = formatShort(futureValue);
+    updateLegend('ls-legend', segments);
 
     // Show results
-    const resultsEl = document.getElementById('emi-results');
-    resultsEl.classList.remove('visible');
-    void resultsEl.offsetWidth;
-    resultsEl.classList.add('visible');
+    const results = document.getElementById('ls-results');
+    results.classList.remove('visible');
+    void results.offsetWidth;
+    results.classList.add('visible');
+}
 
-    document.getElementById('emi-monthly').textContent = formatCurrency(emi);
-    document.getElementById('emi-principal').textContent = formatCurrency(loan);
-    document.getElementById('emi-interest').textContent = formatCurrency(totalInterest);
-    document.getElementById('emi-total').textContent = formatCurrency(totalPayment);
+function resetLumpsum() {
+    ['ls-amount', 'ls-rate', 'ls-years'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.value = ''; el.classList.remove('error'); }
+    });
+    ['err-ls-amount', 'err-ls-rate', 'err-ls-years'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('visible');
+    });
+    document.getElementById('ls-results')?.classList.remove('visible');
+}
 
-    // EMI Pie Chart
-    const emiSegments = [
-        { label: 'Principal', value: loan, color: '#10b981' },
-        { label: 'Interest', value: totalInterest, color: '#fb7185' }
-    ];
-    drawPieChart('emi-pie-chart', emiSegments);
-    document.getElementById('emi-chart-total').textContent = formatShort(totalPayment);
-    updateChartLegend('emi-chart-legend', emiSegments);
-
-    // Stacked bar
-    const principalPct = (loan / totalPayment * 100).toFixed(1);
-    const interestPct = (totalInterest / totalPayment * 100).toFixed(1);
-
-    setTimeout(() => {
-        document.getElementById('principal-bar').style.width = principalPct + '%';
-        document.getElementById('interest-bar').style.width = interestPct + '%';
-    }, 100);
-
-    document.getElementById('principal-pct').textContent = principalPct + '%';
-    document.getElementById('interest-pct').textContent = interestPct + '%';
+// ===== REDRAW CHARTS ON THEME CHANGE =====
+function redrawVisibleCharts() {
+    // SIP
+    const sipResults = document.getElementById('sip-results');
+    if (sipResults?.classList.contains('visible')) {
+        calculateSIP();
+    }
+    // Lumpsum
+    const lsResults = document.getElementById('ls-results');
+    if (lsResults?.classList.contains('visible')) {
+        calculateLumpsum();
+    }
 }
 
 // ===== KEYBOARD SUPPORT =====
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('#section-investment input').forEach(input => {
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') calculate();
-        });
+    initTheme();
+
+    // SIP inputs → Enter
+    document.querySelectorAll('#sip-amount, #sip-rate, #sip-years, #sip-stepup').forEach(el => {
+        if (el) {
+            el.addEventListener('keypress', e => { if (e.key === 'Enter') calculateSIP(); });
+            el.addEventListener('input', () => {
+                const errId = 'err-' + el.id;
+                clearValidation(el.id, errId);
+            });
+        }
     });
 
-    document.querySelectorAll('#section-emi input').forEach(input => {
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') calculateEMI();
-        });
+    // Lumpsum inputs → Enter
+    document.querySelectorAll('#ls-amount, #ls-rate, #ls-years').forEach(el => {
+        if (el) {
+            el.addEventListener('keypress', e => { if (e.key === 'Enter') calculateLumpsum(); });
+            el.addEventListener('input', () => {
+                const errId = 'err-' + el.id;
+                clearValidation(el.id, errId);
+            });
+        }
     });
 });

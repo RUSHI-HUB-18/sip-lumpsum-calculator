@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIP Calculator — Plan Your Wealth | FinCalc</title>
+    <title>Lumpsum Calculator — One-Time Investment Returns | FinCalc</title>
     <meta name="description"
-        content="Plan your SIP investments with step-up support. Calculate future value, total returns and profit with interactive charts.">
-    <meta name="keywords" content="SIP calculator, mutual fund, investment, step-up SIP, returns calculator">
+        content="Calculate returns on one-time lumpsum investments. See how your money grows with compound interest over time.">
+    <meta name="keywords" content="lumpsum calculator, one time investment, compound interest, returns calculator">
     <meta name="author" content="RUSHI-HUB-18">
-    <meta property="og:title" content="SIP Calculator — FinCalc">
+    <meta property="og:title" content="Lumpsum Calculator — FinCalc">
     <meta property="og:description"
-        content="Professional SIP calculator with step-up support and interactive doughnut charts.">
+        content="Professional lumpsum investment calculator with interactive doughnut charts.">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -30,8 +30,8 @@
             </a>
 
             <ul class="nav-links" id="nav-links">
-                <li><a href="index.html" class="active" id="nav-sip">SIP Calculator</a></li>
-                <li><a href="lumpsum.html" id="nav-lumpsum">Lumpsum Calculator</a></li>
+                <li><a href="index.html" id="nav-sip">SIP Calculator</a></li>
+                <li><a href="lumpsum.html" class="active" id="nav-lumpsum">Lumpsum Calculator</a></li>
             </ul>
 
             <div class="nav-right">
@@ -47,63 +47,51 @@
     <main class="main-content">
         <!-- Page Header -->
         <div class="page-header">
-            <span class="page-icon">📈</span>
-            <h1>SIP Calculator</h1>
-            <p>Calculate returns on your systematic monthly investments with annual step-up</p>
+            <span class="page-icon">💎</span>
+            <h1>Lumpsum Calculator</h1>
+            <p>See how a one-time investment grows with the power of compound interest</p>
         </div>
 
         <!-- Calculator Card -->
         <div class="calc-card">
-            <!-- Monthly Amount -->
+            <!-- Investment Amount -->
             <div class="form-group">
-                <label for="sip-amount">Monthly Investment Amount</label>
+                <label for="ls-amount">Investment Amount</label>
                 <div class="input-wrap">
                     <span class="input-prefix">₹</span>
-                    <input type="number" id="sip-amount" class="has-prefix" placeholder="e.g. 5,000" min="1">
+                    <input type="number" id="ls-amount" class="has-prefix" placeholder="e.g. 1,00,000" min="1">
                 </div>
-                <div class="error-msg" id="err-sip-amount"></div>
+                <div class="error-msg" id="err-ls-amount"></div>
             </div>
 
             <!-- Return Rate -->
             <div class="form-group">
-                <label for="sip-rate">Expected Annual Return</label>
+                <label for="ls-rate">Expected Annual Return</label>
                 <div class="input-wrap">
-                    <input type="number" id="sip-rate" class="has-suffix" placeholder="e.g. 12" step="0.1" min="0.1">
+                    <input type="number" id="ls-rate" class="has-suffix" placeholder="e.g. 12" step="0.1" min="0.1">
                     <span class="input-suffix">% p.a.</span>
                 </div>
-                <div class="error-msg" id="err-sip-rate"></div>
+                <div class="error-msg" id="err-ls-rate"></div>
             </div>
 
             <!-- Duration -->
             <div class="form-group">
-                <label for="sip-years">Investment Duration</label>
+                <label for="ls-years">Investment Duration</label>
                 <div class="input-wrap">
-                    <input type="number" id="sip-years" class="has-suffix" placeholder="e.g. 10" min="1">
+                    <input type="number" id="ls-years" class="has-suffix" placeholder="e.g. 10" min="1">
                     <span class="input-suffix">Years</span>
                 </div>
-                <div class="error-msg" id="err-sip-years"></div>
-            </div>
-
-            <!-- Step-up -->
-            <div class="form-group">
-                <label for="sip-stepup">Annual Step-up (Optional)</label>
-                <div class="input-wrap">
-                    <input type="number" id="sip-stepup" class="has-suffix" placeholder="e.g. 10" step="0.5" value="0"
-                        min="0">
-                    <span class="input-suffix">%</span>
-                </div>
-                <div class="error-msg" id="err-sip-stepup"></div>
-                <div class="form-hint">Increase your SIP amount every year by this percentage</div>
+                <div class="error-msg" id="err-ls-years"></div>
             </div>
 
             <!-- Buttons -->
             <div class="btn-row">
-                <button class="btn-primary" id="btn-calc-sip" onclick="calculateSIP()">Calculate Returns</button>
-                <button class="btn-reset" onclick="resetSIP()">Reset</button>
+                <button class="btn-primary" id="btn-calc-ls" onclick="calculateLumpsum()">Calculate Returns</button>
+                <button class="btn-reset" onclick="resetLumpsum()">Reset</button>
             </div>
 
             <!-- Results -->
-            <div class="results-section" id="sip-results">
+            <div class="results-section" id="ls-results">
                 <div class="results-divider"></div>
                 <div class="results-title">
                     <span class="title-dot"></span> Investment Summary
@@ -111,33 +99,33 @@
 
                 <div class="result-items">
                     <div class="result-item">
-                        <span class="r-label"><span class="r-dot invested"></span> Total Invested</span>
-                        <span class="r-value invested" id="res-sip-invested">—</span>
+                        <span class="r-label"><span class="r-dot invested"></span> Amount Invested</span>
+                        <span class="r-value invested" id="res-ls-invested">—</span>
                     </div>
                     <div class="result-item">
                         <span class="r-label"><span class="r-dot returns"></span> Future Value</span>
-                        <span class="r-value returns" id="res-sip-value">—</span>
+                        <span class="r-value returns" id="res-ls-value">—</span>
                     </div>
                     <div class="result-item">
                         <span class="r-label"><span class="r-dot profit"></span> Total Profit</span>
-                        <span class="r-value profit" id="res-sip-profit">—</span>
+                        <span class="r-value profit" id="res-ls-profit">—</span>
                     </div>
                     <div class="result-item">
                         <span class="r-label"><span class="r-dot pct"></span> Profit Percentage</span>
-                        <span class="r-value pct" id="res-sip-pct">—</span>
+                        <span class="r-value pct" id="res-ls-pct">—</span>
                     </div>
                 </div>
 
                 <!-- Doughnut Chart -->
                 <div class="chart-area">
                     <div class="chart-wrapper">
-                        <canvas id="sip-chart" width="280" height="280"></canvas>
+                        <canvas id="ls-chart" width="280" height="280"></canvas>
                         <div class="chart-center">
                             <div class="c-label">Total</div>
-                            <div class="c-value" id="sip-chart-total">—</div>
+                            <div class="c-value" id="ls-chart-total">—</div>
                         </div>
                     </div>
-                    <div class="chart-legend" id="sip-legend"></div>
+                    <div class="chart-legend" id="ls-legend"></div>
                 </div>
             </div>
         </div>
