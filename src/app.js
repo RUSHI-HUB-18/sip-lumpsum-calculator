@@ -573,6 +573,13 @@ let aiTurnCount = 0;
 let aiLastOpeners = [];
 let aiTopicsDiscussed = [];
 
+// Built-in demo key (obfuscated) — works out of the box for visitors
+const _dk = () => {
+    const p = ['QUl6YVN5RDR', 'YaE1nWEpZ', 'TVdZMDBiN0ww', 'SkZ4VmVHYXpu', 'ckxEamtn'];
+    return atob(p.join(''));
+};
+function getDemoKey() { try { return _dk(); } catch (e) { return ''; } }
+
 const AI_SYSTEM_PROMPT = `You are Rushi AI — a warm, sharp, and genuinely helpful financial advisor built into the Rushi Finance Tools platform. You talk like a real person — specifically, like that one brilliant friend who works in finance and always gives you straight, caring advice over coffee. NOT like a chatbot. NOT like a template engine.
 
 ═══════════════════════════════════
@@ -738,7 +745,9 @@ Ask yourself:
 You're not a calculator with a chat interface. You're a trusted advisor who happens to be exceptional at math.`;
 
 
-function getGeminiKey() { return localStorage.getItem(GEMINI_KEY_STORE) || '' }
+function getGeminiKey() {
+    return localStorage.getItem(GEMINI_KEY_STORE) || getDemoKey();
+}
 function setGeminiKey(key) { localStorage.setItem(GEMINI_KEY_STORE, key) }
 
 function initAI() {
@@ -758,9 +767,12 @@ function initAI() {
 function renderAPIKeyUI() {
     const apiSetup = document.getElementById('ai-api-setup');
     if (!apiSetup) return;
-    const key = getGeminiKey();
-    if (key) {
-        apiSetup.innerHTML = `<div class="api-status connected"><span class="api-dot green"></span> Gemini AI Connected <button class="api-change-btn" onclick="promptAPIKey()">Change Key</button></div>`;
+    const userKey = localStorage.getItem(GEMINI_KEY_STORE);
+    const hasDemo = !!getDemoKey();
+    if (userKey) {
+        apiSetup.innerHTML = `<div class="api-status connected"><span class="api-dot green"></span> Gemini AI Connected (Your Key) <button class="api-change-btn" onclick="promptAPIKey()">Change Key</button> <button class="api-change-btn" onclick="resetToDemo()" style="margin-left:6px">Use Default</button></div>`;
+    } else if (hasDemo) {
+        apiSetup.innerHTML = `<div class="api-status connected"><span class="api-dot green"></span> Gemini AI Connected <button class="api-change-btn" onclick="showOwnKeySetup()">Use Your Own Key</button></div>`;
     } else {
         apiSetup.innerHTML = `
             <div class="api-setup-card">
@@ -778,6 +790,27 @@ function renderAPIKeyUI() {
                 <p class="api-note">🔒 Your key is stored only in your browser's localStorage. Never sent anywhere except Google's API.</p>
             </div>`;
     }
+}
+
+function resetToDemo() {
+    localStorage.removeItem(GEMINI_KEY_STORE);
+    renderAPIKeyUI();
+    showToast('Switched to default AI key ✅');
+}
+
+function showOwnKeySetup() {
+    const apiSetup = document.getElementById('ai-api-setup');
+    if (!apiSetup) return;
+    apiSetup.innerHTML = `
+        <div class="api-setup-card">
+            <div class="api-setup-title">🔑 Use Your Own Gemini API Key</div>
+            <p class="api-setup-desc">For unlimited usage, connect your own free API key from Google AI Studio.</p>
+            <div class="api-key-input-row">
+                <input type="password" id="api-key-input" placeholder="Paste your Gemini API key here..." class="api-key-field">
+                <button class="btn btn-go api-save-btn" onclick="saveAPIKey()">Connect</button>
+            </div>
+            <p class="api-note" style="margin-top:8px"><a onclick="resetToDemo()" style="color:var(--green);cursor:pointer;text-decoration:underline">← Back to default key</a></p>
+        </div>`;
 }
 
 function promptAPIKey() {
