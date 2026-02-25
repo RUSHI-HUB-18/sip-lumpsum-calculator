@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIP & Lumpsum Calculator</title>
-    <meta name="description" content="Calculate your SIP and Lumpsum investment returns with step-up support.">
+    <title>SIP, Lumpsum & EMI Calculator</title>
+    <meta name="description" content="Calculate SIP, Lumpsum investment returns and EMI for loans with visual charts.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="index.css">
@@ -21,112 +21,227 @@
         <div class="card">
             <!-- Header -->
             <div class="header">
-                <div class="icon">📈</div>
-                <h1>Investment Calculator</h1>
-                <p>Plan your wealth with SIP & Lumpsum projections</p>
+                <div class="icon">💰</div>
+                <h1>Finance Calculator</h1>
+                <p>SIP, Lumpsum & EMI — all in one place</p>
             </div>
 
-            <!-- Mode Tabs -->
-            <div class="tabs">
-                <button class="tab active" id="tab-both" onclick="setMode('both')">Both</button>
-                <button class="tab" id="tab-sip" onclick="setMode('sip')">SIP Only</button>
-                <button class="tab" id="tab-lumpsum" onclick="setMode('lumpsum')">Lumpsum Only</button>
+            <!-- Main Calculator Tabs -->
+            <div class="main-tabs">
+                <button class="main-tab active" id="main-tab-investment" onclick="switchCalculator('investment')">
+                    <span class="tab-icon">📈</span> Investment
+                </button>
+                <button class="main-tab" id="main-tab-emi" onclick="switchCalculator('emi')">
+                    <span class="tab-icon">🏦</span> EMI Calculator
+                </button>
             </div>
 
-            <!-- Inputs -->
-            <div class="input-group">
-                <label id="amount-label">Monthly SIP / Lumpsum Amount</label>
-                <div class="input-wrapper">
-                    <span class="prefix">₹</span>
-                    <input type="number" id="amount" class="has-prefix" placeholder="e.g. 10,000">
+            <!-- ========== INVESTMENT CALCULATOR ========== -->
+            <div class="calc-section active" id="section-investment">
+                <!-- Mode Tabs -->
+                <div class="tabs">
+                    <button class="tab active" id="tab-both" onclick="setMode('both')">Both</button>
+                    <button class="tab" id="tab-sip" onclick="setMode('sip')">SIP Only</button>
+                    <button class="tab" id="tab-lumpsum" onclick="setMode('lumpsum')">Lumpsum Only</button>
                 </div>
-            </div>
 
-            <div class="input-group">
-                <label>Expected Annual Returns</label>
-                <div class="input-wrapper">
-                    <input type="number" id="rate" class="has-suffix" placeholder="e.g. 12" step="0.1">
-                    <span class="suffix">%</span>
+                <div class="input-group">
+                    <label id="amount-label">Monthly SIP / Lumpsum Amount</label>
+                    <div class="input-wrapper">
+                        <span class="prefix">₹</span>
+                        <input type="number" id="amount" class="has-prefix" placeholder="e.g. 10,000">
+                    </div>
                 </div>
-            </div>
 
-            <div class="input-group">
-                <label>Investment Duration</label>
-                <div class="input-wrapper">
-                    <input type="number" id="years" class="has-suffix" placeholder="e.g. 10">
-                    <span class="suffix">Years</span>
+                <div class="input-group">
+                    <label>Expected Annual Returns</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="rate" class="has-suffix" placeholder="e.g. 12" step="0.1">
+                        <span class="suffix">%</span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="input-group" id="stepup-group">
-                <label>Annual Step-up</label>
-                <div class="input-wrapper">
-                    <input type="number" id="stepup" class="has-suffix" placeholder="e.g. 5" step="0.5" value="0">
-                    <span class="suffix">%</span>
+                <div class="input-group">
+                    <label>Investment Duration</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="years" class="has-suffix" placeholder="e.g. 10">
+                        <span class="suffix">Years</span>
+                    </div>
                 </div>
-                <div class="stepup-note visible" id="stepup-note">Increase your SIP amount every year by this percentage
+
+                <div class="input-group" id="stepup-group">
+                    <label>Annual Step-up</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="stepup" class="has-suffix" placeholder="e.g. 5" step="0.5" value="0">
+                        <span class="suffix">%</span>
+                    </div>
+                    <div class="stepup-note visible">Increase your SIP amount every year by this percentage</div>
                 </div>
-            </div>
 
-            <button class="btn-calculate" id="calc-btn" onclick="calculate()">
-                Calculate Returns →
-            </button>
+                <button class="btn-calculate" onclick="calculate()">Calculate Returns →</button>
 
-            <!-- Results -->
-            <div class="results" id="results">
-                <div class="divider"></div>
+                <!-- Investment Results -->
+                <div class="results" id="results">
+                    <div class="divider"></div>
 
-                <!-- Lumpsum Results -->
-                <div id="lumpsum-results">
-                    <div class="section-title" id="lumpsum-title">Lumpsum Investment</div>
-                    <div class="result-cards">
-                        <div class="result-card invested">
-                            <span class="label"><span class="dot"></span> Invested</span>
-                            <span class="value" id="ls-invested">—</span>
+                    <!-- Lumpsum Results -->
+                    <div id="lumpsum-results">
+                        <div class="section-title" id="lumpsum-title">Lumpsum Investment</div>
+                        <div class="result-cards">
+                            <div class="result-card invested">
+                                <span class="label"><span class="dot"></span> Invested</span>
+                                <span class="value" id="ls-invested">—</span>
+                            </div>
+                            <div class="result-card returns">
+                                <span class="label"><span class="dot"></span> Future Value</span>
+                                <span class="value" id="ls-value">—</span>
+                            </div>
+                            <div class="result-card profit">
+                                <span class="label"><span class="dot"></span> Profit</span>
+                                <span class="value" id="ls-profit">—</span>
+                            </div>
                         </div>
-                        <div class="result-card returns">
-                            <span class="label"><span class="dot"></span> Future Value</span>
-                            <span class="value" id="ls-value">—</span>
+                        <!-- Lumpsum Pie Chart -->
+                        <div class="chart-container" id="ls-chart-container">
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="ls-pie-chart" width="260" height="260"></canvas>
+                                <div class="chart-center-label">
+                                    <div class="chart-total-label">Total</div>
+                                    <div class="chart-total-value" id="ls-chart-total">—</div>
+                                </div>
+                            </div>
+                            <div class="chart-legend" id="ls-chart-legend"></div>
+                        </div>
+                    </div>
+
+                    <!-- SIP Results -->
+                    <div id="sip-results">
+                        <div class="section-title" id="sip-title">SIP Investment</div>
+                        <div class="result-cards">
+                            <div class="result-card invested">
+                                <span class="label"><span class="dot"></span> Total Invested</span>
+                                <span class="value" id="sip-invested">—</span>
+                            </div>
+                            <div class="result-card returns">
+                                <span class="label"><span class="dot"></span> Future Value</span>
+                                <span class="value" id="sip-value">—</span>
+                            </div>
+                            <div class="result-card profit">
+                                <span class="label"><span class="dot"></span> Wealth Gained</span>
+                                <span class="value" id="sip-profit">—</span>
+                            </div>
+                        </div>
+
+                        <!-- SIP Pie Chart -->
+                        <div class="chart-container" id="sip-chart-container">
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="sip-pie-chart" width="260" height="260"></canvas>
+                                <div class="chart-center-label">
+                                    <div class="chart-total-label">Total</div>
+                                    <div class="chart-total-value" id="sip-chart-total">—</div>
+                                </div>
+                            </div>
+                            <div class="chart-legend" id="sip-chart-legend"></div>
+                        </div>
+
+                        <div class="summary-bar" id="sip-summary">
+                            <div class="growth-label">Growth Multiplier</div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="summary-row">
+                                <span class="multiplier" id="multiplier">—</span>
+                                <span class="growth-pct" id="growth-pct">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer">Projected returns • Actual returns may vary</div>
+                </div>
+            </div>
+
+            <!-- ========== EMI CALCULATOR ========== -->
+            <div class="calc-section" id="section-emi">
+                <div class="input-group">
+                    <label>Loan Amount</label>
+                    <div class="input-wrapper">
+                        <span class="prefix">₹</span>
+                        <input type="number" id="emi-loan" class="has-prefix" placeholder="e.g. 10,00,000">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Interest Rate (Annual)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="emi-rate" class="has-suffix" placeholder="e.g. 8.5" step="0.1">
+                        <span class="suffix">%</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Loan Tenure</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="emi-tenure" class="has-suffix" placeholder="e.g. 20">
+                        <span class="suffix">Years</span>
+                    </div>
+                </div>
+
+                <button class="btn-calculate" onclick="calculateEMI()">Calculate EMI →</button>
+
+                <!-- EMI Results -->
+                <div class="results" id="emi-results">
+                    <div class="divider"></div>
+
+                    <div class="result-cards">
+                        <div class="result-card emi">
+                            <span class="label"><span class="dot"></span> Monthly EMI</span>
+                            <span class="value" id="emi-monthly">—</span>
+                        </div>
+                        <div class="result-card invested">
+                            <span class="label"><span class="dot"></span> Principal Amount</span>
+                            <span class="value" id="emi-principal">—</span>
                         </div>
                         <div class="result-card profit">
-                            <span class="label"><span class="dot"></span> Profit</span>
-                            <span class="value" id="ls-profit">—</span>
+                            <span class="label"><span class="dot"></span> Total Interest</span>
+                            <span class="value" id="emi-interest">—</span>
+                        </div>
+                        <div class="result-card total">
+                            <span class="label"><span class="dot"></span> Total Payment</span>
+                            <span class="value" id="emi-total">—</span>
                         </div>
                     </div>
+
+                    <!-- EMI Pie Chart -->
+                    <div class="chart-container" id="emi-chart-container">
+                        <div class="chart-canvas-wrapper">
+                            <canvas id="emi-pie-chart" width="260" height="260"></canvas>
+                            <div class="chart-center-label">
+                                <div class="chart-total-label">Total</div>
+                                <div class="chart-total-value" id="emi-chart-total">—</div>
+                            </div>
+                        </div>
+                        <div class="chart-legend" id="emi-chart-legend"></div>
+                    </div>
+
+                    <!-- EMI Breakdown Bar -->
+                    <div class="emi-breakdown">
+                        <div class="breakdown-title">Payment Breakdown</div>
+                        <div class="stacked-bar">
+                            <div class="principal-bar" id="principal-bar" style="width: 0%"></div>
+                            <div class="interest-bar" id="interest-bar" style="width: 0%"></div>
+                        </div>
+                        <div class="bar-labels">
+                            <span class="bar-label"><span class="bar-dot principal"></span> Principal <span
+                                    id="principal-pct">0%</span></span>
+                            <span class="bar-label"><span class="bar-dot interest"></span> Interest <span
+                                    id="interest-pct">0%</span></span>
+                        </div>
+                    </div>
+
+                    <div class="footer">EMI calculated using reducing balance method</div>
                 </div>
-
-                <!-- SIP Results -->
-                <div id="sip-results">
-                    <div class="section-title" id="sip-title">SIP Investment</div>
-                    <div class="result-cards">
-                        <div class="result-card invested">
-                            <span class="label"><span class="dot"></span> Total Invested</span>
-                            <span class="value" id="sip-invested">—</span>
-                        </div>
-                        <div class="result-card returns">
-                            <span class="label"><span class="dot"></span> Future Value</span>
-                            <span class="value" id="sip-value">—</span>
-                        </div>
-                        <div class="result-card profit">
-                            <span class="label"><span class="dot"></span> Wealth Gained</span>
-                            <span class="value" id="sip-profit">—</span>
-                        </div>
-                    </div>
-
-                    <div class="summary-bar" id="sip-summary">
-                        <div class="growth-label">Growth Multiplier</div>
-                        <div class="progress-track">
-                            <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
-                        </div>
-                        <div class="summary-row">
-                            <span class="multiplier" id="multiplier">—</span>
-                            <span class="growth-pct" id="growth-pct">—</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="footer">Projected returns • Actual returns may vary</div>
             </div>
+
         </div>
     </div>
 </body>
