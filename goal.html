@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Planner — How Much to Invest | FinCalc</title>
+    <meta name="description"
+        content="Set a financial goal and find out how much SIP or lumpsum you need to invest to reach it.">
+    <meta name="keywords" content="goal planner, investment goal, SIP required, financial planning, target calculator">
+    <meta name="author" content="Rushi Sonar">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>FinCalc</a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">SIP</a></li>
+                <li><a href="lumpsum.html">Lumpsum</a></li>
+                <li><a href="emi.html">EMI</a></li>
+                <li><a href="goal.html" class="active">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
+            </ul>
+            <div class="nav-right">
+                <button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button>
+                <button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-wrap">
+        <div class="page-head">
+            <span class="icon">🎯</span>
+            <h1>Goal Planner</h1>
+            <p>Set a target amount and find how much you need to invest monthly</p>
+        </div>
+        <div class="card">
+            <div class="fg"><label for="goal-amt">Target Amount</label>
+                <div class="input-w"><span class="pfx">₹</span><input type="number" id="goal-amt" class="has-pfx"
+                        placeholder="e.g. 50,00,000"></div>
+                <div class="err-msg" id="e-goal-amt"></div>
+            </div>
+            <div class="fg"><label for="goal-rate">Expected Annual Return</label>
+                <div class="input-w"><input type="number" id="goal-rate" class="has-sfx" placeholder="e.g. 12"
+                        step="0.1"><span class="sfx">% p.a.</span></div>
+                <div class="err-msg" id="e-goal-rate"></div>
+            </div>
+            <div class="fg"><label for="goal-yrs">Time Horizon</label>
+                <div class="input-w"><input type="number" id="goal-yrs" class="has-sfx" placeholder="e.g. 15"><span
+                        class="sfx">Years</span></div>
+                <div class="err-msg" id="e-goal-yrs"></div>
+            </div>
+            <div class="btn-row"><button class="btn btn-go" onclick="calcGoal()">Plan My Goal</button><button
+                    class="btn btn-rst" onclick="rstGoal()">Reset</button></div>
+
+            <div class="results" id="goal-res">
+                <div class="res-divider"></div>
+                <div class="res-title"><span class="dot"></span>Your Investment Plan</div>
+                <div class="res-items">
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Monthly SIP Needed</span><span
+                            class="rv c1" id="r-goal-sip">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c2"></span>Or Lumpsum Today</span><span
+                            class="rv c2" id="r-goal-ls">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c3"></span>Total You'll Invest
+                            (SIP)</span><span class="rv c3" id="r-goal-inv">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c6"></span>Market Returns</span><span
+                            class="rv c6" id="r-goal-ret">—</span></div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <div class="chart-label">Investment Breakdown</div><canvas id="ch-goal-d"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-label">Path to Goal</div><canvas id="ch-goal-l"></canvas>
+                    </div>
+                </div>
+                <div class="share-row">
+                    <button class="share-btn" onclick="copyLink()"><span class="s-icon">🔗</span>Copy Link</button>
+                    <button class="share-btn" onclick="exportPDF()"><span class="s-icon">📄</span>PDF</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="site-footer">
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
+    </footer>
+</body>
+
+</html>

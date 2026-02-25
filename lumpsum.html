@@ -4,141 +4,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumpsum Calculator — One-Time Investment Returns | FinCalc</title>
+    <title>Lumpsum Calculator — One-Time Investment | FinCalc</title>
     <meta name="description"
-        content="Calculate returns on one-time lumpsum investments. See how your money grows with compound interest over time.">
-    <meta name="keywords" content="lumpsum calculator, one time investment, compound interest, returns calculator">
-    <meta name="author" content="RUSHI-HUB-18">
-    <meta property="og:title" content="Lumpsum Calculator — FinCalc">
-    <meta property="og:description"
-        content="Professional lumpsum investment calculator with interactive doughnut charts.">
+        content="Calculate compound interest returns on one-time lumpsum investments with interactive charts.">
+    <meta name="keywords" content="lumpsum calculator, one-time investment, compound interest, returns calculator">
+    <meta name="author" content="Rushi Sonar">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="app.js" defer></script>
 </head>
 
 <body>
-    <!-- Navbar -->
     <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="nav-brand">
-                <span class="brand-icon">₹</span>
-                FinCalc
-            </a>
-
+        <div class="nav-inner">
+            <a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>FinCalc</a>
             <ul class="nav-links" id="nav-links">
-                <li><a href="index.html" id="nav-sip">SIP Calculator</a></li>
-                <li><a href="lumpsum.html" class="active" id="nav-lumpsum">Lumpsum Calculator</a></li>
+                <li><a href="index.html">SIP</a></li>
+                <li><a href="lumpsum.html" class="active">Lumpsum</a></li>
+                <li><a href="emi.html">EMI</a></li>
+                <li><a href="goal.html">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
             </ul>
-
             <div class="nav-right">
-                <div class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" role="button" tabindex="0">
-                    <div class="toggle-thumb" id="toggle-icon">☀️</div>
-                </div>
-                <button class="nav-hamburger" onclick="toggleNav()" aria-label="Menu">☰</button>
+                <button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button>
+                <button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Page Header -->
-        <div class="page-header">
-            <span class="page-icon">💎</span>
+    <main class="page-wrap">
+        <div class="page-head">
+            <span class="icon">💎</span>
             <h1>Lumpsum Calculator</h1>
-            <p>See how a one-time investment grows with the power of compound interest</p>
+            <p>See how a one-time investment grows with compound interest</p>
         </div>
-
-        <!-- Calculator Card -->
-        <div class="calc-card">
-            <!-- Investment Amount -->
-            <div class="form-group">
-                <label for="ls-amount">Investment Amount</label>
-                <div class="input-wrap">
-                    <span class="input-prefix">₹</span>
-                    <input type="number" id="ls-amount" class="has-prefix" placeholder="e.g. 1,00,000" min="1">
-                </div>
-                <div class="error-msg" id="err-ls-amount"></div>
+        <div class="card">
+            <div class="fg"><label for="ls-amt">Investment Amount</label>
+                <div class="input-w"><span class="pfx">₹</span><input type="number" id="ls-amt" class="has-pfx"
+                        placeholder="e.g. 1,00,000"></div>
+                <div class="err-msg" id="e-ls-amt"></div>
             </div>
-
-            <!-- Return Rate -->
-            <div class="form-group">
-                <label for="ls-rate">Expected Annual Return</label>
-                <div class="input-wrap">
-                    <input type="number" id="ls-rate" class="has-suffix" placeholder="e.g. 12" step="0.1" min="0.1">
-                    <span class="input-suffix">% p.a.</span>
-                </div>
-                <div class="error-msg" id="err-ls-rate"></div>
+            <div class="fg"><label for="ls-rate">Expected Annual Return</label>
+                <div class="input-w"><input type="number" id="ls-rate" class="has-sfx" placeholder="e.g. 12"
+                        step="0.1"><span class="sfx">% p.a.</span></div>
+                <div class="err-msg" id="e-ls-rate"></div>
             </div>
-
-            <!-- Duration -->
-            <div class="form-group">
-                <label for="ls-years">Investment Duration</label>
-                <div class="input-wrap">
-                    <input type="number" id="ls-years" class="has-suffix" placeholder="e.g. 10" min="1">
-                    <span class="input-suffix">Years</span>
-                </div>
-                <div class="error-msg" id="err-ls-years"></div>
+            <div class="fg"><label for="ls-yrs">Duration</label>
+                <div class="input-w"><input type="number" id="ls-yrs" class="has-sfx" placeholder="e.g. 10"><span
+                        class="sfx">Years</span></div>
+                <div class="err-msg" id="e-ls-yrs"></div>
             </div>
+            <div class="btn-row"><button class="btn btn-go" onclick="calcLS()">Calculate Returns</button><button
+                    class="btn btn-rst" onclick="rstLS()">Reset</button></div>
 
-            <!-- Buttons -->
-            <div class="btn-row">
-                <button class="btn-primary" id="btn-calc-ls" onclick="calculateLumpsum()">Calculate Returns</button>
-                <button class="btn-reset" onclick="resetLumpsum()">Reset</button>
-            </div>
-
-            <!-- Results -->
-            <div class="results-section" id="ls-results">
-                <div class="results-divider"></div>
-                <div class="results-title">
-                    <span class="title-dot"></span> Investment Summary
+            <div class="results" id="ls-res">
+                <div class="res-divider"></div>
+                <div class="res-title"><span class="dot"></span>Investment Summary</div>
+                <div class="res-items">
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Amount Invested</span><span
+                            class="rv c1" id="r-ls-inv">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c2"></span>Future Value</span><span
+                            class="rv c2" id="r-ls-fv">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c3"></span>Total Profit</span><span
+                            class="rv c3" id="r-ls-pr">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Profit %</span><span class="rv c1"
+                            id="r-ls-pct">—</span></div>
                 </div>
-
-                <div class="result-items">
-                    <div class="result-item">
-                        <span class="r-label"><span class="r-dot invested"></span> Amount Invested</span>
-                        <span class="r-value invested" id="res-ls-invested">—</span>
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <div class="chart-label">Invested vs Returns</div><canvas id="ch-ls-d"></canvas>
                     </div>
-                    <div class="result-item">
-                        <span class="r-label"><span class="r-dot returns"></span> Future Value</span>
-                        <span class="r-value returns" id="res-ls-value">—</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="r-label"><span class="r-dot profit"></span> Total Profit</span>
-                        <span class="r-value profit" id="res-ls-profit">—</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="r-label"><span class="r-dot pct"></span> Profit Percentage</span>
-                        <span class="r-value pct" id="res-ls-pct">—</span>
+                    <div class="chart-box">
+                        <div class="chart-label">Growth Over Time</div><canvas id="ch-ls-l"></canvas>
                     </div>
                 </div>
-
-                <!-- Doughnut Chart -->
-                <div class="chart-area">
-                    <div class="chart-wrapper">
-                        <canvas id="ls-chart" width="280" height="280"></canvas>
-                        <div class="chart-center">
-                            <div class="c-label">Total</div>
-                            <div class="c-value" id="ls-chart-total">—</div>
-                        </div>
-                    </div>
-                    <div class="chart-legend" id="ls-legend"></div>
+                <div class="share-row">
+                    <button class="share-btn" onclick="shareWA('ls')"><span class="s-icon">💬</span>WhatsApp</button>
+                    <button class="share-btn" onclick="shareTW('ls')"><span class="s-icon">🐦</span>Twitter</button>
+                    <button class="share-btn" onclick="copyLink()"><span class="s-icon">🔗</span>Copy Link</button>
+                    <button class="share-btn" onclick="exportCSV('ls')"><span class="s-icon">📊</span>CSV</button>
+                    <button class="share-btn" onclick="exportPDF()"><span class="s-icon">📄</span>PDF</button>
                 </div>
             </div>
         </div>
     </main>
-
-    <!-- Footer -->
     <footer class="site-footer">
-        <div class="footer-divider"></div>
-        <div class="footer-content">
-            Built with ❤️ by <a href="https://github.com/RUSHI-HUB-18" target="_blank"
-                rel="noopener">RUSHI-HUB-18</a><br>
-            © 2026 FinCalc — All calculations are estimates. Actual returns may vary.
-        </div>
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
     </footer>
 </body>
 

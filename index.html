@@ -6,151 +6,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIP Calculator — Plan Your Wealth | FinCalc</title>
     <meta name="description"
-        content="Plan your SIP investments with step-up support. Calculate future value, total returns and profit with interactive charts.">
-    <meta name="keywords" content="SIP calculator, mutual fund, investment, step-up SIP, returns calculator">
-    <meta name="author" content="RUSHI-HUB-18">
-    <meta property="og:title" content="SIP Calculator — FinCalc">
-    <meta property="og:description"
-        content="Professional SIP calculator with step-up support and interactive doughnut charts.">
+        content="Professional SIP calculator with step-up support, doughnut charts and growth projections. Plan your systematic investments.">
+    <meta name="keywords"
+        content="SIP calculator, mutual fund, systematic investment plan, step-up SIP, returns calculator">
+    <meta name="author" content="Rushi Sonar">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="app.js" defer></script>
 </head>
 
 <body>
-    <!-- Navbar -->
     <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="nav-brand">
-                <span class="brand-icon">₹</span>
-                FinCalc
-            </a>
-
+        <div class="nav-inner">
+            <a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>FinCalc</a>
             <ul class="nav-links" id="nav-links">
-                <li><a href="index.html" class="active" id="nav-sip">SIP Calculator</a></li>
-                <li><a href="lumpsum.html" id="nav-lumpsum">Lumpsum Calculator</a></li>
+                <li><a href="index.html" class="active">SIP</a></li>
+                <li><a href="lumpsum.html">Lumpsum</a></li>
+                <li><a href="emi.html">EMI</a></li>
+                <li><a href="goal.html">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
             </ul>
-
             <div class="nav-right">
-                <div class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" role="button" tabindex="0">
-                    <div class="toggle-thumb" id="toggle-icon">☀️</div>
-                </div>
-                <button class="nav-hamburger" onclick="toggleNav()" aria-label="Menu">☰</button>
+                <button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button>
+                <button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Page Header -->
-        <div class="page-header">
-            <span class="page-icon">📈</span>
+    <main class="page-wrap">
+        <div class="page-head">
+            <span class="icon">📈</span>
             <h1>SIP Calculator</h1>
-            <p>Calculate returns on your systematic monthly investments with annual step-up</p>
+            <p>Calculate returns on systematic monthly investments with annual step-up</p>
         </div>
-
-        <!-- Calculator Card -->
-        <div class="calc-card">
-            <!-- Monthly Amount -->
-            <div class="form-group">
-                <label for="sip-amount">Monthly Investment Amount</label>
-                <div class="input-wrap">
-                    <span class="input-prefix">₹</span>
-                    <input type="number" id="sip-amount" class="has-prefix" placeholder="e.g. 5,000" min="1">
-                </div>
-                <div class="error-msg" id="err-sip-amount"></div>
+        <div class="card">
+            <div class="fg"><label for="sip-amt">Monthly Investment</label>
+                <div class="input-w"><span class="pfx">₹</span><input type="number" id="sip-amt" class="has-pfx"
+                        placeholder="e.g. 5,000"></div>
+                <div class="err-msg" id="e-sip-amt"></div>
             </div>
-
-            <!-- Return Rate -->
-            <div class="form-group">
-                <label for="sip-rate">Expected Annual Return</label>
-                <div class="input-wrap">
-                    <input type="number" id="sip-rate" class="has-suffix" placeholder="e.g. 12" step="0.1" min="0.1">
-                    <span class="input-suffix">% p.a.</span>
-                </div>
-                <div class="error-msg" id="err-sip-rate"></div>
+            <div class="fg"><label for="sip-rate">Expected Annual Return</label>
+                <div class="input-w"><input type="number" id="sip-rate" class="has-sfx" placeholder="e.g. 12"
+                        step="0.1"><span class="sfx">% p.a.</span></div>
+                <div class="err-msg" id="e-sip-rate"></div>
             </div>
-
-            <!-- Duration -->
-            <div class="form-group">
-                <label for="sip-years">Investment Duration</label>
-                <div class="input-wrap">
-                    <input type="number" id="sip-years" class="has-suffix" placeholder="e.g. 10" min="1">
-                    <span class="input-suffix">Years</span>
-                </div>
-                <div class="error-msg" id="err-sip-years"></div>
+            <div class="fg"><label for="sip-yrs">Duration</label>
+                <div class="input-w"><input type="number" id="sip-yrs" class="has-sfx" placeholder="e.g. 10"><span
+                        class="sfx">Years</span></div>
+                <div class="err-msg" id="e-sip-yrs"></div>
             </div>
-
-            <!-- Step-up -->
-            <div class="form-group">
-                <label for="sip-stepup">Annual Step-up (Optional)</label>
-                <div class="input-wrap">
-                    <input type="number" id="sip-stepup" class="has-suffix" placeholder="e.g. 10" step="0.5" value="0"
-                        min="0">
-                    <span class="input-suffix">%</span>
-                </div>
-                <div class="error-msg" id="err-sip-stepup"></div>
-                <div class="form-hint">Increase your SIP amount every year by this percentage</div>
+            <div class="fg"><label for="sip-su">Annual Step-up (Optional)</label>
+                <div class="input-w"><input type="number" id="sip-su" class="has-sfx" placeholder="e.g. 10" step="0.5"
+                        value="0"><span class="sfx">%</span></div>
+                <div class="form-hint">Increase SIP yearly by this percentage</div>
             </div>
+            <div class="btn-row"><button class="btn btn-go" onclick="calcSIP()">Calculate Returns</button><button
+                    class="btn btn-rst" onclick="rstSIP()">Reset</button></div>
 
-            <!-- Buttons -->
-            <div class="btn-row">
-                <button class="btn-primary" id="btn-calc-sip" onclick="calculateSIP()">Calculate Returns</button>
-                <button class="btn-reset" onclick="resetSIP()">Reset</button>
-            </div>
-
-            <!-- Results -->
-            <div class="results-section" id="sip-results">
-                <div class="results-divider"></div>
-                <div class="results-title">
-                    <span class="title-dot"></span> Investment Summary
+            <div class="results" id="sip-res">
+                <div class="res-divider"></div>
+                <div class="res-title"><span class="dot"></span>Investment Summary</div>
+                <div class="res-items">
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Total Invested</span><span
+                            class="rv c1" id="r-sip-inv">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c2"></span>Future Value</span><span
+                            class="rv c2" id="r-sip-fv">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c3"></span>Total Profit</span><span
+                            class="rv c3" id="r-sip-pr">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Profit %</span><span class="rv c1"
+                            id="r-sip-pct">—</span></div>
                 </div>
-
-                <div class="result-items">
-                    <div class="result-item">
-                        <span class="r-label"><span class="r-dot invested"></span> Total Invested</span>
-                        <span class="r-value invested" id="res-sip-invested">—</span>
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <div class="chart-label">Invested vs Returns</div><canvas id="ch-sip-d"></canvas>
                     </div>
-                    <div class="result-item">
-                        <span class="r-label"><span class="r-dot returns"></span> Future Value</span>
-                        <span class="r-value returns" id="res-sip-value">—</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="r-label"><span class="r-dot profit"></span> Total Profit</span>
-                        <span class="r-value profit" id="res-sip-profit">—</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="r-label"><span class="r-dot pct"></span> Profit Percentage</span>
-                        <span class="r-value pct" id="res-sip-pct">—</span>
+                    <div class="chart-box">
+                        <div class="chart-label">Growth Over Time</div><canvas id="ch-sip-l"></canvas>
                     </div>
                 </div>
-
-                <!-- Doughnut Chart -->
-                <div class="chart-area">
-                    <div class="chart-wrapper">
-                        <canvas id="sip-chart" width="280" height="280"></canvas>
-                        <div class="chart-center">
-                            <div class="c-label">Total</div>
-                            <div class="c-value" id="sip-chart-total">—</div>
-                        </div>
-                    </div>
-                    <div class="chart-legend" id="sip-legend"></div>
+                <div class="share-row">
+                    <button class="share-btn" onclick="shareWA('sip')"><span class="s-icon">💬</span>WhatsApp</button>
+                    <button class="share-btn" onclick="shareTW('sip')"><span class="s-icon">🐦</span>Twitter</button>
+                    <button class="share-btn" onclick="copyLink()"><span class="s-icon">🔗</span>Copy Link</button>
+                    <button class="share-btn" onclick="exportCSV('sip')"><span class="s-icon">📊</span>CSV</button>
+                    <button class="share-btn" onclick="exportPDF()"><span class="s-icon">📄</span>PDF</button>
                 </div>
             </div>
         </div>
     </main>
-
-    <!-- Footer -->
     <footer class="site-footer">
-        <div class="footer-divider"></div>
-        <div class="footer-content">
-            Built with ❤️ by <a href="https://github.com/RUSHI-HUB-18" target="_blank"
-                rel="noopener">RUSHI-HUB-18</a><br>
-            © 2026 FinCalc — All calculations are estimates. Actual returns may vary.
-        </div>
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
     </footer>
 </body>
 

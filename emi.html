@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMI Calculator — Loan Repayment Planner | FinCalc</title>
+    <meta name="description"
+        content="Calculate monthly EMI, total interest and payment breakdown for home, car and personal loans.">
+    <meta name="keywords" content="EMI calculator, loan calculator, home loan, car loan, monthly installment">
+    <meta name="author" content="Rushi Sonar">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>FinCalc</a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">SIP</a></li>
+                <li><a href="lumpsum.html">Lumpsum</a></li>
+                <li><a href="emi.html" class="active">EMI</a></li>
+                <li><a href="goal.html">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
+            </ul>
+            <div class="nav-right">
+                <button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button>
+                <button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-wrap">
+        <div class="page-head">
+            <span class="icon">🏦</span>
+            <h1>EMI Calculator</h1>
+            <p>Plan your loan repayment — monthly EMI, interest breakdown & amortization</p>
+        </div>
+        <div class="card">
+            <div class="fg"><label for="emi-amt">Loan Amount</label>
+                <div class="input-w"><span class="pfx">₹</span><input type="number" id="emi-amt" class="has-pfx"
+                        placeholder="e.g. 10,00,000"></div>
+                <div class="err-msg" id="e-emi-amt"></div>
+            </div>
+            <div class="fg"><label for="emi-rate">Interest Rate (Annual)</label>
+                <div class="input-w"><input type="number" id="emi-rate" class="has-sfx" placeholder="e.g. 8.5"
+                        step="0.1"><span class="sfx">% p.a.</span></div>
+                <div class="err-msg" id="e-emi-rate"></div>
+            </div>
+            <div class="fg"><label for="emi-yrs">Loan Tenure</label>
+                <div class="input-w"><input type="number" id="emi-yrs" class="has-sfx" placeholder="e.g. 20"><span
+                        class="sfx">Years</span></div>
+                <div class="err-msg" id="e-emi-yrs"></div>
+            </div>
+            <div class="btn-row"><button class="btn btn-go" onclick="calcEMI()">Calculate EMI</button><button
+                    class="btn btn-rst" onclick="rstEMI()">Reset</button></div>
+
+            <div class="results" id="emi-res">
+                <div class="res-divider"></div>
+                <div class="res-title"><span class="dot"></span>Loan Summary</div>
+                <div class="res-items">
+                    <div class="res-item"><span class="rl"><span class="rd c5"></span>Monthly EMI</span><span
+                            class="rv c5" id="r-emi-emi">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Principal</span><span
+                            class="rv c1" id="r-emi-p">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c3"></span>Total Interest</span><span
+                            class="rv c3" id="r-emi-i">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c4"></span>Total Payment</span><span
+                            class="rv c4" id="r-emi-t">—</span></div>
+                    <div class="res-item"><span class="rl"><span class="rd c1"></span>Principal Ratio</span><span
+                            class="rv c1" id="r-emi-pct">—</span></div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <div class="chart-label">Principal vs Interest</div><canvas id="ch-emi-d"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-label">Loan Amortization</div><canvas id="ch-emi-l"></canvas>
+                    </div>
+                </div>
+                <div class="share-row">
+                    <button class="share-btn" onclick="shareWA('emi')"><span class="s-icon">💬</span>WhatsApp</button>
+                    <button class="share-btn" onclick="shareTW('emi')"><span class="s-icon">🐦</span>Twitter</button>
+                    <button class="share-btn" onclick="copyLink()"><span class="s-icon">🔗</span>Copy Link</button>
+                    <button class="share-btn" onclick="exportCSV('emi')"><span class="s-icon">📊</span>CSV</button>
+                    <button class="share-btn" onclick="exportPDF()"><span class="s-icon">📄</span>PDF</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="site-footer">
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
+    </footer>
+</body>
+
+</html>
