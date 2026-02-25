@@ -1000,12 +1000,422 @@ async function processAI() {
     messages.scrollTop = messages.scrollHeight;
 }
 
+/* =================================================================
+   TAX CALCULATOR — Old vs New Regime (FY 2025-26)
+   ================================================================= */
+function calcTax() {
+    const income = pNum('tax-income');
+    if (!income || income <= 0) { showToast('Please enter a valid income', '⚠️'); return; }
+
+    const ageGroup = document.getElementById('tax-age')?.value || 'general';
+    const ded80c = Math.min(pNum('tax-80c') || 0, 150000);
+    const ded80d = Math.min(pNum('tax-80d') || 0, ageGroup === 'general' ? 25000 : 50000);
+    const dedHRA = pNum('tax-hra') || 0;
+    const ded80ccd = Math.min(pNum('tax-80ccd') || 0, 50000);
+    const dedOther = pNum('tax-other') || 0;
+    const stdDed = parseInt(document.getElementById('tax-std')?.value || '75000');
+
+    // Old regime calculation
+    const totalDeductions = ded80c + ded80d + dedHRA + ded80ccd + dedOther + stdDed;
+    const oldTaxable = Math.max(income - totalDeductions, 0);
+    const oldTaxResult = calcOldRegimeTax(oldTaxable, ageGroup);
+
+    // New regime calculation (FY 2025-26)
+    const newStdDed = 75000; // Standard deduction in new regime
+    const newTaxable = Math.max(income - newStdDed, 0);
+    const newTaxResult = calcNewRegimeTax(newTaxable);
+
+    // Display results
+    document.getElementById('tax-results').style.display = 'block';
+    document.getElementById('old-taxable').textContent = fmtINR(oldTaxable);
+    document.getElementById('old-tax').textContent = fmtINR(oldTaxResult.total);
+    document.getElementById('old-effective').textContent = income > 0 ? (oldTaxResult.total / income * 100).toFixed(1) + '%' : '0%';
+    document.getElementById('new-taxable').textContent = fmtINR(newTaxable);
+    document.getElementById('new-tax').textContent = fmtINR(newTaxResult.total);
+    document.getElementById('new-effective').textContent = income > 0 ? (newTaxResult.total / income * 100).toFixed(1) + '%' : '0%';
+
+    // Winner banner
+    const savings = Math.abs(oldTaxResult.total - newTaxResult.total);
+    const winnerBanner = document.getElementById('tax-winner-banner');
+    if (oldTaxResult.total < newTaxResult.total) {
+        winnerBanner.innerHTML = `🏆 <strong>Old Regime saves you ${fmtINR(savings)}</strong> — Go with Old Regime!`;
+        winnerBanner.className = 'tax-winner-banner winner-old';
+    } else if (newTaxResult.total < oldTaxResult.total) {
+        winnerBanner.innerHTML = `🏆 <strong>New Regime saves you ${fmtINR(savings)}</strong> — Go with New Regime!`;
+        winnerBanner.className = 'tax-winner-banner winner-new';
+    } else {
+        winnerBanner.innerHTML = `⚖️ <strong>Both regimes result in the same tax</strong>`;
+        winnerBanner.className = 'tax-winner-banner winner-tie';
+    }
+
+    // Savings card
+    const savingsCard = document.getElementById('tax-savings-card');
+    const savingsText = document.getElementById('tax-savings-text');
+    savingsText.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center">
+            <div><div style="font-size:13px;color:var(--text-2)">Your Deductions Used</div><div style="font-size:20px;font-weight:700;color:var(--green)">${fmtINR(totalDeductions)}</div></div>
+            <div><div style="font-size:13px;color:var(--text-2)">Tax Saved vs No Deductions</div><div style="font-size:20px;font-weight:700;color:var(--green)">${fmtINR(Math.max(0, calcOldRegimeTax(Math.max(income - stdDed, 0), ageGroup).total - oldTaxResult.total))}</div></div>
+        </div>`;
+
+    // Slab breakdowns
+    document.getElementById('old-slab-details').innerHTML = renderSlabBreakdown(oldTaxResult.slabs);
+    document.getElementById('new-slab-details').innerHTML = renderSlabBreakdown(newTaxResult.slabs);
+
+    // Chart
+    createDoughnutChart('tax-chart', [oldTaxResult.total, newTaxResult.total], ['Old Regime Tax', 'New Regime Tax'], ['#f43f5e', '#3b82f6']);
+
+    document.getElementById('tax-results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function calcOldRegimeTax(taxable, ageGroup) {
+    let slabs = [];
+    let exemptLimit = 250000;
+    if (ageGroup === 'senior') exemptLimit = 300000;
+    if (ageGroup === 'supersenior') exemptLimit = 500000;
+
+    const oldSlabs = [
+        { min: 0, max: exemptLimit, rate: 0 },
+        { min: exemptLimit, max: 500000, rate: 5 },
+        { min: 500000, max: 1000000, rate: 20 },
+        { min: 1000000, max: Infinity, rate: 30 }
+    ];
+
+    let tax = 0;
+    for (const slab of oldSlabs) {
+        if (taxable > slab.min) {
+            const tier = Math.min(taxable, slab.max) - slab.min;
+            const t = tier * slab.rate / 100;
+            tax += t;
+            if (slab.rate > 0 || tier > 0) {
+                slabs.push({ range: `₹${fmtShort(slab.min)} - ${slab.max === Infinity ? 'Above' : '₹' + fmtShort(slab.max)}`, rate: slab.rate + '%', tax: fmtINR(t) });
+            }
+        }
+    }
+
+    // Rebate u/s 87A
+    if (taxable <= 500000) tax = 0;
+
+    const cess = tax * 0.04;
+    return { base: tax, cess, total: Math.round(tax + cess), slabs };
+}
+
+function calcNewRegimeTax(taxable) {
+    const newSlabs = [
+        { min: 0, max: 400000, rate: 0 },
+        { min: 400000, max: 800000, rate: 5 },
+        { min: 800000, max: 1200000, rate: 10 },
+        { min: 1200000, max: 1600000, rate: 15 },
+        { min: 1600000, max: 2000000, rate: 20 },
+        { min: 2000000, max: 2400000, rate: 25 },
+        { min: 2400000, max: Infinity, rate: 30 }
+    ];
+
+    let tax = 0, slabs = [];
+    for (const slab of newSlabs) {
+        if (taxable > slab.min) {
+            const tier = Math.min(taxable, slab.max) - slab.min;
+            const t = tier * slab.rate / 100;
+            tax += t;
+            if (slab.rate > 0 || tier > 0) {
+                slabs.push({ range: `₹${fmtShort(slab.min)} - ${slab.max === Infinity ? 'Above' : '₹' + fmtShort(slab.max)}`, rate: slab.rate + '%', tax: fmtINR(t) });
+            }
+        }
+    }
+
+    // Rebate u/s 87A (new regime — up to ₹12 lakh, marginal relief)
+    if (taxable <= 1200000) tax = 0;
+
+    const cess = tax * 0.04;
+    return { base: tax, cess, total: Math.round(tax + cess), slabs };
+}
+
+function fmtShort(n) {
+    if (n >= 10000000) return (n / 10000000).toFixed(1) + 'Cr';
+    if (n >= 100000) return (n / 100000).toFixed(1) + 'L';
+    if (n >= 1000) return (n / 1000).toFixed(0) + 'K';
+    return n.toString();
+}
+
+function renderSlabBreakdown(slabs) {
+    if (!slabs.length) return '<div style="color:var(--text-2);font-size:13px">No tax applicable</div>';
+    return slabs.map(s => `
+        <div class="slab-row">
+            <span class="slab-range">${s.range}</span>
+            <span class="slab-rate">${s.rate}</span>
+            <span class="slab-tax">${s.tax}</span>
+        </div>`).join('');
+}
+
+function shareTax(method) {
+    const old = document.getElementById('old-tax')?.textContent || '—';
+    const nw = document.getElementById('new-tax')?.textContent || '—';
+    const text = `💰 Income Tax Comparison\n🏛️ Old Regime: ${old}\n🆕 New Regime: ${nw}\n\nCalculated at: ${location.href}`;
+    shareGeneric(method, text);
+}
+
+function exportTaxCSV() {
+    const rows = [['Regime', 'Taxable Income', 'Total Tax', 'Effective Rate'],
+    ['Old', document.getElementById('old-taxable')?.textContent, document.getElementById('old-tax')?.textContent, document.getElementById('old-effective')?.textContent],
+    ['New', document.getElementById('new-taxable')?.textContent, document.getElementById('new-tax')?.textContent, document.getElementById('new-effective')?.textContent]
+    ];
+    downloadCSV(rows, 'tax_comparison.csv');
+}
+
+/* =================================================================
+   FD / RD CALCULATOR
+   ================================================================= */
+let currentFDRDMode = 'fd';
+
+function switchFDRD(mode) {
+    currentFDRDMode = mode;
+    document.getElementById('fd-form').style.display = mode === 'fd' ? 'block' : 'none';
+    document.getElementById('rd-form').style.display = mode === 'rd' ? 'block' : 'none';
+    document.getElementById('fd-tab').classList.toggle('active', mode === 'fd');
+    document.getElementById('rd-tab').classList.toggle('active', mode === 'rd');
+    document.getElementById('fdrd-results').style.display = 'none';
+}
+
+function calcFD() {
+    const principal = pNum('fd-amount');
+    const rate = parseFloat(document.getElementById('fd-rate')?.value);
+    const years = parseFloat(document.getElementById('fd-tenure')?.value);
+    const freq = parseInt(document.getElementById('fd-compound')?.value || '4');
+
+    if (!principal || principal <= 0) { showToast('Enter a valid deposit amount', '⚠️'); return; }
+    if (!rate || rate <= 0 || rate > 30) { showToast('Enter a valid interest rate', '⚠️'); return; }
+    if (!years || years <= 0 || years > 30) { showToast('Enter a valid tenure', '⚠️'); return; }
+
+    const r = rate / 100;
+    const maturity = principal * Math.pow(1 + r / freq, freq * years);
+    const interest = maturity - principal;
+    const totalReturn = (interest / principal * 100).toFixed(1);
+    const effectiveYield = (Math.pow(maturity / principal, 1 / years) - 1) * 100;
+
+    showFDRDResults(principal, interest, maturity, totalReturn, effectiveYield, years, 'FD');
+}
+
+function calcRD() {
+    const monthly = pNum('rd-amount');
+    const rate = parseFloat(document.getElementById('rd-rate')?.value);
+    const years = parseFloat(document.getElementById('rd-tenure')?.value);
+
+    if (!monthly || monthly <= 0) { showToast('Enter a valid monthly amount', '⚠️'); return; }
+    if (!rate || rate <= 0 || rate > 30) { showToast('Enter a valid interest rate', '⚠️'); return; }
+    if (!years || years <= 0 || years > 30) { showToast('Enter a valid tenure', '⚠️'); return; }
+
+    const n = years * 4; // quarterly compounding
+    const r = rate / 400; // quarterly rate
+    const totalMonths = years * 12;
+    const totalInvested = monthly * totalMonths;
+
+    // RD maturity formula (quarterly compounding)
+    let maturity = 0;
+    for (let i = 0; i < totalMonths; i++) {
+        const monthsRemaining = totalMonths - i;
+        const quartersRemaining = monthsRemaining / 3;
+        maturity += monthly * Math.pow(1 + r, quartersRemaining);
+    }
+
+    const interest = maturity - totalInvested;
+    const totalReturn = (interest / totalInvested * 100).toFixed(1);
+    const effectiveYield = totalInvested > 0 ? (Math.pow(maturity / totalInvested, 1 / years) - 1) * 100 : 0;
+
+    showFDRDResults(totalInvested, interest, maturity, totalReturn, effectiveYield, years, 'RD');
+}
+
+function showFDRDResults(invested, interest, maturity, returnPct, effectYield, years, type) {
+    const results = document.getElementById('fdrd-results');
+    results.style.display = 'block';
+    document.getElementById('fdrd-result-title').textContent = `📊 ${type} Returns`;
+    document.getElementById('fdrd-label-invested').textContent = type === 'FD' ? 'Deposit Amount' : 'Total Invested';
+    document.getElementById('fdrd-invested').textContent = fmtINR(Math.round(invested));
+    document.getElementById('fdrd-interest').textContent = fmtINR(Math.round(interest));
+    document.getElementById('fdrd-maturity').textContent = fmtINR(Math.round(maturity));
+    document.getElementById('fdrd-return-pct').textContent = returnPct + '%';
+    document.getElementById('fdrd-effective-yield').textContent = effectYield.toFixed(2) + '% p.a.';
+
+    // Doughnut chart
+    createDoughnutChart('fdrd-doughnut-chart', [Math.round(invested), Math.round(interest)],
+        [type === 'FD' ? 'Deposit' : 'Invested', 'Interest Earned'], ['#3b82f6', '#00c897']);
+
+    // Line chart — growth over years
+    const labels = [];
+    const values = [];
+    for (let y = 0; y <= years; y++) {
+        labels.push('Year ' + y);
+        if (type === 'FD') {
+            const freq = parseInt(document.getElementById('fd-compound')?.value || '4');
+            const rate = parseFloat(document.getElementById('fd-rate')?.value) / 100;
+            values.push(Math.round(invested * Math.pow(1 + rate / freq, freq * y)));
+        } else {
+            const monthly = pNum('rd-amount');
+            const rate = parseFloat(document.getElementById('rd-rate')?.value);
+            const r = rate / 400;
+            const months = y * 12;
+            let val = 0;
+            for (let i = 0; i < months; i++) {
+                val += monthly * Math.pow(1 + r, (months - i) / 3);
+            }
+            values.push(Math.round(val));
+        }
+    }
+    createLineChart('fdrd-line-chart', labels, values, `${type} Growth`);
+
+    results.scrollIntoView({ behavior: 'smooth' });
+}
+
+function shareFDRD(method) {
+    const inv = document.getElementById('fdrd-invested')?.textContent || '—';
+    const mat = document.getElementById('fdrd-maturity')?.textContent || '—';
+    const int = document.getElementById('fdrd-interest')?.textContent || '—';
+    const type = currentFDRDMode.toUpperCase();
+    const text = `🏦 ${type} Calculation\n💰 Invested: ${inv}\n📈 Interest: ${int}\n🎯 Maturity: ${mat}\n\nCalculated at: ${location.href}`;
+    shareGeneric(method, text);
+}
+
+function exportFDRDCSV() {
+    const rows = [['Metric', 'Value'],
+    ['Type', currentFDRDMode.toUpperCase()],
+    ['Invested', document.getElementById('fdrd-invested')?.textContent],
+    ['Interest', document.getElementById('fdrd-interest')?.textContent],
+    ['Maturity', document.getElementById('fdrd-maturity')?.textContent],
+    ['Return %', document.getElementById('fdrd-return-pct')?.textContent]
+    ];
+    downloadCSV(rows, `${currentFDRDMode}_calculation.csv`);
+}
+
+function shareGeneric(method, text) {
+    const url = encodeURIComponent(location.href);
+    const enc = encodeURIComponent(text);
+    if (method === 'whatsapp') window.open(`https://wa.me/?text=${enc}`);
+    else if (method === 'twitter') window.open(`https://twitter.com/intent/tweet?text=${enc}`);
+    else if (method === 'copy') { navigator.clipboard?.writeText(text); showToast('Copied! 📋'); }
+}
+
+function downloadCSV(rows, filename) {
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    showToast('CSV downloaded! 📊');
+}
+
+/* =================================================================
+   PWA — Service Worker + Install Prompt
+   ================================================================= */
+let deferredInstallPrompt = null;
+
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.warn('SW registration failed:', err));
+    }
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    showInstallBanner();
+});
+
+function showInstallBanner() {
+    if (document.getElementById('pwa-install-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'pwa-install-banner';
+    banner.className = 'pwa-install-banner';
+    banner.innerHTML = `
+        <div class="pwa-install-inner">
+            <span class="pwa-icon">📲</span>
+            <div class="pwa-text">
+                <strong>Install Rushi Finance</strong>
+                <span>Add to home screen for quick access</span>
+            </div>
+            <button class="pwa-install-btn" onclick="installPWA()">Install</button>
+            <button class="pwa-dismiss-btn" onclick="this.parentElement.parentElement.remove()">✕</button>
+        </div>`;
+    document.body.appendChild(banner);
+    setTimeout(() => banner.classList.add('show'), 100);
+}
+
+async function installPWA() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const choice = await deferredInstallPrompt.userChoice;
+    if (choice.outcome === 'accepted') showToast('App installed! 🎉');
+    deferredInstallPrompt = null;
+    document.getElementById('pwa-install-banner')?.remove();
+}
+
+/* =================================================================
+   ANIMATED LANDING PAGE — Scroll Reveal + Animated Counters
+   ================================================================= */
+function initLandingAnimations() {
+    // Only run on index/home page
+    const hero = document.querySelector('.hero');
+    if (!hero) return;
+
+    // Staggered hero animation
+    hero.classList.add('hero-animated');
+
+    // Scroll reveal for tool cards
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, idx) => {
+            if (entry.isIntersecting) {
+                entry.target.style.transitionDelay = (idx * 0.08) + 's';
+                entry.target.classList.add('revealed');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.tool-card').forEach(card => {
+        card.classList.add('reveal-item');
+        observer.observe(card);
+    });
+
+    // Animate counter numbers
+    document.querySelectorAll('.stat-num').forEach(el => {
+        const text = el.textContent.trim();
+        const numMatch = text.match(/(\d+)/);
+        if (numMatch) {
+            const target = parseInt(numMatch[1]);
+            const suffix = text.replace(numMatch[1], '');
+            animateCounter(el, target, suffix);
+        }
+    });
+}
+
+function animateCounter(el, target, suffix) {
+    let current = 0;
+    const duration = 2000;
+    const step = target / (duration / 16);
+    const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+            current = target;
+            clearInterval(timer);
+        }
+        el.textContent = Math.floor(current) + suffix;
+    }, 16);
+}
+
 /* ===== INIT ===== */
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     updateAuthUI();
     initAI();
     renderSavedItems();
+    initLandingAnimations();
+    registerServiceWorker();
+
+    // Format new calc inputs
+    ['tax-income', 'tax-80c', 'tax-80d', 'tax-hra', 'tax-80ccd', 'tax-other', 'fd-amount', 'rd-amount'].forEach(id => {
+        const inp = document.getElementById(id);
+        if (inp) inp.addEventListener('input', () => { inp.value = fmtInput(inp.value); });
+    });
 
     document.querySelectorAll('input[type="number"]').forEach(inp => {
         inp.addEventListener('input', () => { const eid = 'e-' + inp.id; clrV(inp.id, eid) });

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Tax Calculator — Old vs New Regime Comparison | Rushi Finance Tools</title>
+    <meta name="description"
+        content="Compare old vs new tax regime instantly. Calculate income tax for FY 2025-26 with all deductions — 80C, 80D, HRA, NPS. Find which regime saves more.">
+    <meta name="keywords"
+        content="income tax calculator, old vs new regime, tax comparison, 80C deduction, HRA exemption, tax planning India">
+    <meta name="author" content="Rushi Sonar">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00c897">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-brand"><span class="brand-icon">₹</span>Rushi Finance</a>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="sip.html">SIP</a></li>
+                <li><a href="lumpsum.html">Lumpsum</a></li>
+                <li><a href="emi.html">EMI</a></li>
+                <li><a href="goal.html">Goal Planner</a></li>
+                <li><a href="retirement.html">Retirement</a></li>
+                <li><a href="tax.html" class="active">Tax</a></li>
+                <li><a href="fdrd.html">FD/RD</a></li>
+                <li><a href="ai.html">AI Assistant</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <div class="nav-right">
+                <button class="theme-btn" onclick="togTheme()" title="Toggle theme"><span
+                        class="theme-icon">☀️</span></button>
+                <button class="nav-auth-btn" id="nav-login-btn" onclick="showAuthModal('login')">Login</button>
+                <div class="user-menu" id="nav-user-menu" style="display:none">
+                    <div class="user-avatar" onclick="toggleUserDropdown()">R</div>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div class="udh-name" id="ud-name">User</div>
+                            <div class="udh-email" id="ud-email">user@email.com</div>
+                        </div>
+                        <a href="dashboard.html">📊 My Dashboard</a>
+                        <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+                    </div>
+                </div>
+                <button class="hamburger" onclick="togNav()" aria-label="Menu">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- AUTH MODAL -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-card">
+            <button class="modal-close" onclick="hideAuthModal()">✕</button>
+            <div id="auth-login-form">
+                <div class="modal-title">Welcome Back 👋</div>
+                <div class="modal-sub">Login to save your calculations & goals</div>
+                <div class="fg"><label for="login-email">Email</label>
+                    <div class="input-w"><input type="email" id="login-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="login-pass">Password</label>
+                    <div class="input-w"><input type="password" id="login-pass" placeholder="••••••••"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doLogin()" style="flex:1">Login</button></div>
+                <div class="modal-switch">Don't have an account? <a onclick="switchAuthMode('signup')">Sign up</a></div>
+            </div>
+            <div id="auth-signup-form" style="display:none">
+                <div class="modal-title">Create Account 🚀</div>
+                <div class="modal-sub">Start saving your financial calculations</div>
+                <div class="fg"><label for="signup-name">Full Name</label>
+                    <div class="input-w"><input type="text" id="signup-name" placeholder="Rushi Sonar"></div>
+                </div>
+                <div class="fg"><label for="signup-email">Email</label>
+                    <div class="input-w"><input type="email" id="signup-email" placeholder="you@email.com"></div>
+                </div>
+                <div class="fg"><label for="signup-pass">Password</label>
+                    <div class="input-w"><input type="password" id="signup-pass" placeholder="Min 4 characters"></div>
+                </div>
+                <div class="btn-row"><button class="btn btn-go" onclick="doSignup()" style="flex:1">Create
+                        Account</button></div>
+                <div class="modal-switch">Already have an account? <a onclick="switchAuthMode('login')">Login</a></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <section class="page-hero">
+        <div class="page-icon">🧾</div>
+        <h1>Income Tax Calculator</h1>
+        <p class="hero-subtitle">Old vs New Regime — Compare and save more on taxes (FY 2025-26)</p>
+    </section>
+
+    <!-- CALCULATOR CARD -->
+    <section class="calc-section">
+        <div class="calc-card" id="tax-calc-card">
+            <div class="calc-card-title">📋 Enter Your Income Details</div>
+
+            <!-- Income -->
+            <div class="fg">
+                <label for="tax-income">Annual Gross Income (₹)</label>
+                <div class="input-w"><input type="text" id="tax-income" placeholder="e.g. 12,00,000"
+                        inputmode="numeric"></div>
+                <div class="field-error" id="err-tax-income"></div>
+            </div>
+
+            <!-- Age Group -->
+            <div class="fg">
+                <label for="tax-age">Age Group</label>
+                <div class="input-w">
+                    <select id="tax-age" class="styled-select">
+                        <option value="general">Below 60</option>
+                        <option value="senior">60-80 (Senior Citizen)</option>
+                        <option value="supersenior">Above 80 (Super Senior)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="calc-card-title" style="margin-top:24px;font-size:15px">🏦 Deductions (Old Regime)</div>
+            <p style="color:var(--text-2);font-size:12px;margin:-8px 0 12px">These reduce tax only under the Old Regime
+            </p>
+
+            <div class="fg">
+                <label for="tax-80c">Section 80C (Max ₹1.5L) — PPF, ELSS, LIC, etc.</label>
+                <div class="input-w"><input type="text" id="tax-80c" placeholder="e.g. 1,50,000" inputmode="numeric">
+                </div>
+            </div>
+
+            <div class="fg">
+                <label for="tax-80d">Section 80D (Max ₹25K/₹50K) — Health Insurance</label>
+                <div class="input-w"><input type="text" id="tax-80d" placeholder="e.g. 25,000" inputmode="numeric">
+                </div>
+            </div>
+
+            <div class="fg">
+                <label for="tax-hra">HRA Exemption (₹)</label>
+                <div class="input-w"><input type="text" id="tax-hra" placeholder="e.g. 2,40,000" inputmode="numeric">
+                </div>
+            </div>
+
+            <div class="fg">
+                <label for="tax-80ccd">Section 80CCD(1B) — NPS (Max ₹50K extra)</label>
+                <div class="input-w"><input type="text" id="tax-80ccd" placeholder="e.g. 50,000" inputmode="numeric">
+                </div>
+            </div>
+
+            <div class="fg">
+                <label for="tax-other">Other Deductions (₹) — 80E, 80G, etc.</label>
+                <div class="input-w"><input type="text" id="tax-other" placeholder="e.g. 30,000" inputmode="numeric">
+                </div>
+            </div>
+
+            <div class="fg">
+                <label for="tax-std">Standard Deduction</label>
+                <div class="input-w">
+                    <select id="tax-std" class="styled-select">
+                        <option value="75000">₹75,000 (Salaried — FY 2025-26)</option>
+                        <option value="50000">₹50,000 (Salaried — FY 2024-25)</option>
+                        <option value="0">Not Applicable</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-go calc-btn" id="tax-calc-btn" onclick="calcTax()">Compare Tax Regimes</button>
+        </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="results-section" id="tax-results" style="display:none">
+        <div class="calc-card">
+            <div class="calc-card-title">📊 Tax Comparison — Old vs New Regime</div>
+
+            <!-- Winner Banner -->
+            <div class="tax-winner-banner" id="tax-winner-banner"></div>
+
+            <!-- Side by side comparison -->
+            <div class="tax-comparison-grid">
+                <div class="tax-regime-card old">
+                    <div class="regime-label">🏛️ Old Regime</div>
+                    <div class="regime-income" id="old-taxable">—</div>
+                    <div class="regime-sublabel">Taxable Income</div>
+                    <div class="regime-tax" id="old-tax">—</div>
+                    <div class="regime-sublabel">Total Tax + Cess</div>
+                    <div class="regime-effective" id="old-effective">—</div>
+                    <div class="regime-sublabel">Effective Rate</div>
+                </div>
+                <div class="tax-regime-card new">
+                    <div class="regime-label">🆕 New Regime</div>
+                    <div class="regime-income" id="new-taxable">—</div>
+                    <div class="regime-sublabel">Taxable Income</div>
+                    <div class="regime-tax" id="new-tax">—</div>
+                    <div class="regime-sublabel">Total Tax + Cess</div>
+                    <div class="regime-effective" id="new-effective">—</div>
+                    <div class="regime-sublabel">Effective Rate</div>
+                </div>
+            </div>
+
+            <!-- Savings -->
+            <div class="tax-savings-card" id="tax-savings-card">
+                <div id="tax-savings-text"></div>
+            </div>
+
+            <!-- Chart -->
+            <div class="chart-container" style="max-width:500px;margin:0 auto">
+                <canvas id="tax-chart"></canvas>
+            </div>
+
+            <!-- Slab breakdown -->
+            <div class="tax-slab-breakdown">
+                <div class="slab-col">
+                    <div class="slab-title">Old Regime Slabs</div>
+                    <div id="old-slab-details"></div>
+                </div>
+                <div class="slab-col">
+                    <div class="slab-title">New Regime Slabs</div>
+                    <div id="new-slab-details"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share/Export -->
+        <div class="share-export">
+            <button class="share-btn whatsapp" onclick="shareTax('whatsapp')">📱 WhatsApp</button>
+            <button class="share-btn twitter" onclick="shareTax('twitter')">🐦 Twitter</button>
+            <button class="share-btn copy" onclick="shareTax('copy')">📋 Copy</button>
+            <button class="share-btn csv" onclick="exportTaxCSV()">📊 CSV</button>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="footer-line"></div>
+        <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
+                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
+    </footer>
+</body>
+
+</html>
