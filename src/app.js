@@ -567,7 +567,7 @@ function renderSavedItems() {
    Premium Conversational Intelligence Engine
    ================================================================= */
 const GEMINI_KEY_STORE = 'rushi_gemini_api_key';
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 let aiChatHistory = [];
 let aiTurnCount = 0;
 let aiLastOpeners = [];
@@ -916,9 +916,7 @@ async function processAI() {
                 temperature: 0.9,
                 topP: 0.95,
                 topK: 50,
-                maxOutputTokens: 2048,
-                presencePenalty: 0.3,
-                frequencyPenalty: 0.4
+                maxOutputTokens: 2048
             }
         };
 
