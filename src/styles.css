@@ -1904,3 +1904,230 @@ textarea:focus-visible {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-3)
 }
+
+/* ================ GEMINI API SETUP ================ */
+.api-setup-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 16px;
+    max-width: 660px;
+    margin-left: auto;
+    margin-right: auto;
+    animation: fadeDown .4s var(--ease)
+}
+
+.api-setup-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-1);
+    margin-bottom: 6px
+}
+
+.api-setup-desc {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.6;
+    margin-bottom: 16px
+}
+
+.api-setup-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px
+}
+
+.api-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-2)
+}
+
+.step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 50%;
+    background: var(--gradient-1);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700
+}
+
+.api-link {
+    color: var(--green);
+    font-weight: 600;
+    text-decoration: none
+}
+
+.api-link:hover {
+    text-decoration: underline
+}
+
+.api-key-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px
+}
+
+.api-key-field {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-2);
+    color: var(--text-1);
+    font-family: var(--font);
+    font-size: 13px;
+    transition: border-color .2s
+}
+
+.api-key-field:focus {
+    border-color: var(--green);
+    outline: none
+}
+
+.api-save-btn {
+    padding: 10px 20px !important;
+    font-size: 13px !important;
+    white-space: nowrap
+}
+
+.api-note {
+    font-size: 11px;
+    color: var(--text-3);
+    line-height: 1.5
+}
+
+.api-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 660px;
+    margin: 0 auto 16px;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-1);
+    background: var(--card);
+    border: 1px solid var(--border)
+}
+
+.api-status.connected {
+    border-color: #00b38644;
+    background: linear-gradient(135deg, #00b38608, #00b38612)
+}
+
+.api-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block
+}
+
+.api-dot.green {
+    background: #00b386;
+    box-shadow: 0 0 6px #00b38688
+}
+
+.api-change-btn {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .2s
+}
+
+.api-change-btn:hover {
+    border-color: var(--green);
+    color: var(--green)
+}
+
+/* ================ TYPING INDICATOR ================ */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-3);
+    font-size: 13px;
+    font-style: italic
+}
+
+.dot-pulse {
+    display: inline-flex;
+    gap: 4px
+}
+
+.dot-pulse::before,
+.dot-pulse::after,
+.dot-pulse span {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: dotBounce 1.4s infinite ease-in-out both
+}
+
+.dot-pulse::before {
+    animation-delay: -0.32s
+}
+
+.dot-pulse::after {
+    animation-delay: -0.16s
+}
+
+@keyframes dotBounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0.4);
+        opacity: 0.4
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1
+    }
+}
+
+/* AI response formatting */
+.ai-msg.bot ul {
+    padding-left: 18px;
+    margin: 6px 0
+}
+
+.ai-msg.bot li {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 3px;
+    color: var(--text-2)
+}
+
+.ai-msg.bot strong {
+    color: var(--text-1)
+}
+
+@media (max-width: 600px) {
+    .api-key-input-row {
+        flex-direction: column
+    }
+
+    .api-setup-card {
+        padding: 16px
+    }
+}

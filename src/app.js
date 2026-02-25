@@ -563,8 +563,33 @@ function renderSavedItems() {
 }
 
 /* =================================================================
-   AI INVESTMENT ASSISTANT
+   AI INVESTMENT ASSISTANT — Powered by Google Gemini 2.0 Flash
    ================================================================= */
+const GEMINI_KEY_STORE = 'rushi_gemini_api_key';
+const GEMINI_MODEL = 'gemini-2.0-flash';
+let aiChatHistory = [];
+
+const AI_SYSTEM_PROMPT = `You are "Rushi AI" — a friendly, expert Indian financial advisor built into the Rushi Finance Tools platform. You help users with SIP planning, lumpsum investments, EMI calculations, goal planning, retirement planning, and all personal finance topics.
+
+RULES:
+1. Always give calculations when numbers are mentioned. Use standard Indian financial formulas.
+2. Use Indian currency (₹) with Indian number formatting (lakhs, crores).
+3. When suggesting SIP amounts, show 3 scenarios: Conservative (8%), Moderate (12%), Aggressive (15%).
+4. Keep answers concise (2-4 paragraphs max), practical, and actionable.
+5. Use emojis sparingly for friendliness (💰📈🎯💡).
+6. When users mention amounts like "1 crore" = ₹1,00,00,000, "50 lakh" = ₹50,00,000.
+7. For SIP calculations: FV = P × [((1+r)^n - 1) / r], where r = annual_rate/12, n = years×12.
+8. For Lumpsum: FV = P × (1+r)^n.
+9. For Goal (reverse SIP): SIP = Target × r / ((1+r)^n - 1).
+10. Always mention that these are estimates and actual returns may vary. Suggest consulting a certified financial advisor for personalized advice.
+11. If user asks non-finance questions, politely redirect to finance topics.
+12. Mention relevant tools on the platform when applicable (e.g., "Try our SIP Calculator for detailed charts!").
+13. Format your responses with markdown bold (**text**) for key numbers and use bullet points for multiple items.
+14. Assume Indian tax rules (Section 80C, LTCG, etc.) when tax questions arise.`;
+
+function getGeminiKey() { return localStorage.getItem(GEMINI_KEY_STORE) || '' }
+function setGeminiKey(key) { localStorage.setItem(GEMINI_KEY_STORE, key) }
+
 function initAI() {
     const input = document.getElementById('ai-input');
     const sendBtn = document.getElementById('ai-send');
@@ -575,137 +600,158 @@ function initAI() {
     document.querySelectorAll('.ai-suggestion').forEach(btn => {
         btn.addEventListener('click', () => { input.value = btn.textContent; processAI() })
     });
+    // Show API key status
+    renderAPIKeyUI();
 }
 
-function processAI() {
+function renderAPIKeyUI() {
+    const apiSetup = document.getElementById('ai-api-setup');
+    if (!apiSetup) return;
+    const key = getGeminiKey();
+    if (key) {
+        apiSetup.innerHTML = `<div class="api-status connected"><span class="api-dot green"></span> Gemini AI Connected <button class="api-change-btn" onclick="promptAPIKey()">Change Key</button></div>`;
+    } else {
+        apiSetup.innerHTML = `
+            <div class="api-setup-card">
+                <div class="api-setup-title">🔑 Connect Google Gemini AI (Free!)</div>
+                <p class="api-setup-desc">Get a free API key from Google AI Studio to power the AI assistant with real intelligence.</p>
+                <div class="api-setup-steps">
+                    <div class="api-step"><span class="step-num">1</span> Go to <a href="https://aistudio.google.com/apikey" target="_blank" class="api-link">aistudio.google.com/apikey</a></div>
+                    <div class="api-step"><span class="step-num">2</span> Click "Create API Key" (free, no billing needed)</div>
+                    <div class="api-step"><span class="step-num">3</span> Copy and paste your key below</div>
+                </div>
+                <div class="api-key-input-row">
+                    <input type="password" id="api-key-input" placeholder="Paste your Gemini API key here..." class="api-key-field">
+                    <button class="btn btn-go api-save-btn" onclick="saveAPIKey()">Connect</button>
+                </div>
+                <p class="api-note">🔒 Your key is stored only in your browser's localStorage. Never sent anywhere except Google's API.</p>
+            </div>`;
+    }
+}
+
+function promptAPIKey() {
+    const key = prompt('Enter your Gemini API key:', getGeminiKey());
+    if (key !== null && key.trim()) {
+        setGeminiKey(key.trim());
+        renderAPIKeyUI();
+        showToast('API key updated! ✅');
+    }
+}
+
+function saveAPIKey() {
+    const input = document.getElementById('api-key-input');
+    if (!input) return;
+    const key = input.value.trim();
+    if (!key) { showToast('Please enter a valid API key', '⚠️'); return; }
+    setGeminiKey(key);
+    renderAPIKeyUI();
+    showToast('Gemini AI connected! 🎉');
+}
+
+function escapeHtml(str) { return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+
+function markdownToHtml(md) {
+    // Convert markdown-like response to HTML
+    let html = md;
+    // Bold: **text** → <strong>text</strong>
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic: *text* → <em>text</em>
+    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+    // Bullet lists: * item or - item
+    html = html.replace(/^[\*\-]\s+(.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/gs, match => '<ul>' + match + '</ul>');
+    // Numbered lists: 1. item
+    html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+    // Headers: ## text
+    html = html.replace(/^###\s+(.+)$/gm, '<h4 style="margin:8px 0 4px;font-size:14px;font-weight:700">$1</h4>');
+    html = html.replace(/^##\s+(.+)$/gm, '<h3 style="margin:10px 0 4px;font-size:15px;font-weight:700">$1</h3>');
+    // Code blocks
+    html = html.replace(/`([^`]+)`/g, '<code style="background:var(--bg-2);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>');
+    // Line breaks
+    html = html.replace(/\n\n/g, '<br><br>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+async function processAI() {
     const input = document.getElementById('ai-input');
     const messages = document.getElementById('ai-messages');
     if (!input || !messages) return;
     const text = input.value.trim();
     if (!text) return;
 
+    const apiKey = getGeminiKey();
+    if (!apiKey) {
+        showToast('Please connect your Gemini API key first! 🔑', '⚠️');
+        return;
+    }
+
     // Add user message
     messages.innerHTML += `<div class="ai-msg user">${escapeHtml(text)}</div>`;
     input.value = '';
+    input.disabled = true;
+    document.getElementById('ai-send').disabled = true;
 
-    // Parse the message
-    setTimeout(() => {
-        const response = parseAIQuery(text);
-        messages.innerHTML += `<div class="ai-msg bot">${response}</div>`;
-        messages.scrollTop = messages.scrollHeight;
-    }, 600);
-}
+    // Add typing indicator
+    const typingId = 'typing-' + Date.now();
+    messages.innerHTML += `<div class="ai-msg bot typing-indicator" id="${typingId}"><span class="dot-pulse"></span> Rushi AI is thinking...</div>`;
+    messages.scrollTop = messages.scrollHeight;
 
-function escapeHtml(str) { return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+    // Build conversation history for context
+    aiChatHistory.push({ role: 'user', parts: [{ text }] });
+    // Keep only last 20 messages for context window
+    if (aiChatHistory.length > 20) aiChatHistory = aiChatHistory.slice(-20);
 
-function parseAIQuery(text) {
-    const lower = text.toLowerCase();
-    // Extract numbers
-    const numbers = text.match(/[\d,]+(?:\.\d+)?/g)?.map(n => parseFloat(n.replace(/,/g, ''))) || [];
-    const croreMatch = lower.match(/([\d.]+)\s*(?:crore|cr)/);
-    const lakhMatch = lower.match(/([\d.]+)\s*(?:lakh|lac|l)\b/);
-    const thousandMatch = lower.match(/([\d.]+)\s*(?:thousand|k)\b/);
-    const yearMatch = lower.match(/([\d]+)\s*(?:year|yr|years|yrs)/);
-    const monthMatch = lower.match(/([\d,]+)\s*(?:per month|monthly|\/month|\/mo|a month|pm)/);
+    try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+        const body = {
+            system_instruction: { parts: [{ text: AI_SYSTEM_PROMPT }] },
+            contents: aiChatHistory,
+            generationConfig: {
+                temperature: 0.7,
+                topP: 0.9,
+                topK: 40,
+                maxOutputTokens: 1024
+            }
+        };
 
-    let targetAmount = null;
-    if (croreMatch) targetAmount = parseFloat(croreMatch[1]) * 1e7;
-    else if (lakhMatch) targetAmount = parseFloat(lakhMatch[1]) * 1e5;
-    else if (thousandMatch) targetAmount = parseFloat(thousandMatch[1]) * 1e3;
-
-    let years = yearMatch ? parseInt(yearMatch[1]) : null;
-    let monthlyAmt = monthMatch ? parseFloat(monthMatch[1].replace(/,/g, '')) : null;
-
-    // Case 1: "I want X in Y years" — Goal based
-    if (targetAmount && years) {
-        const scenarios = [
-            { name: 'Conservative (8%)', rate: 0.08 },
-            { name: 'Moderate (12%)', rate: 0.12 },
-            { name: 'Aggressive (15%)', rate: 0.15 }
-        ];
-        let html = `Great goal! To accumulate <strong>${fmtS(targetAmount)}</strong> in <strong>${years} years</strong>, here's your plan:<div class="msg-result">`;
-        scenarios.forEach(sc => {
-            const mr = sc.rate / 12;
-            const n = years * 12;
-            const sip = targetAmount * mr / (Math.pow(1 + mr, n) - 1);
-            html += `<div class="msg-result-row"><span class="mrr-label">${sc.name}</span><span class="mrr-value">${fmt(sip)}/mo</span></div>`;
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
         });
-        html += '</div><br>💡 <em>A moderate 12% return is realistic for equity mutual funds over long periods. Start early for maximum compounding benefit!</em>';
-        return html;
+
+        if (!resp.ok) {
+            const errData = await resp.json().catch(() => ({}));
+            const errMsg = errData?.error?.message || `API Error (${resp.status})`;
+            throw new Error(errMsg);
+        }
+
+        const data = await resp.json();
+        const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I couldn\'t generate a response. Please try again.';
+
+        // Add to history
+        aiChatHistory.push({ role: 'model', parts: [{ text: aiText }] });
+
+        // Remove typing indicator and add response
+        document.getElementById(typingId)?.remove();
+        const responseHtml = markdownToHtml(aiText);
+        messages.innerHTML += `<div class="ai-msg bot">${responseHtml}</div>`;
+    } catch (err) {
+        document.getElementById(typingId)?.remove();
+        let errorMessage = `<span style="color:var(--red)">⚠️ Error: ${escapeHtml(err.message)}</span>`;
+        if (err.message.includes('API key')) {
+            errorMessage += `<br><br>Your API key may be invalid. <a onclick="promptAPIKey()" style="color:var(--green);cursor:pointer;text-decoration:underline">Update your API key</a>`;
+        }
+        messages.innerHTML += `<div class="ai-msg bot">${errorMessage}</div>`;
+        // Remove failed message from history
+        aiChatHistory.pop();
     }
 
-    // Case 2: "I can invest X per month" — project wealth
-    if (monthlyAmt) {
-        const y = years || 20;
-        const scenarios = [
-            { name: 'Conservative (8%)', rate: 0.08 },
-            { name: 'Moderate (12%)', rate: 0.12 },
-            { name: 'Aggressive (15%)', rate: 0.15 }
-        ];
-        let html = `Investing <strong>${fmt(monthlyAmt)}/month</strong> for <strong>${y} years</strong>:<div class="msg-result">`;
-        scenarios.forEach(sc => {
-            const mr = sc.rate / 12;
-            const n = y * 12;
-            const fv = monthlyAmt * (Math.pow(1 + mr, n) - 1) / mr;
-            html += `<div class="msg-result-row"><span class="mrr-label">${sc.name}</span><span class="mrr-value">${fmtS(fv)}</span></div>`;
-        });
-        const invested = monthlyAmt * y * 12;
-        html += `</div><div class="msg-result-row" style="padding:6px 0;font-size:12px;color:var(--text-3)">Total invested: ${fmt(invested)}</div>`;
-        html += '<br>💡 <em>Even small increases (step-up) of 10% yearly can dramatically boost final wealth!</em>';
-        return html;
-    }
-
-    // Case 3: Retirement related
-    if (lower.includes('retire') || lower.includes('retirement')) {
-        const age = numbers.find(n => n >= 20 && n <= 45) || 25;
-        const retAge = numbers.find(n => n >= 45 && n <= 65) || 55;
-        const yrsToRetire = retAge - age;
-        const monthlyExp = 30000;
-        const inf = 0.06, rate = 0.12;
-        const futureMonthExp = monthlyExp * Math.pow(1 + inf, yrsToRetire);
-        const futureAnnualExp = futureMonthExp * 12;
-        const realRate = (rate - inf) / (1 + inf);
-        const yrsInRetire = 80 - retAge;
-        const corpus = futureAnnualExp * (1 - Math.pow(1 + realRate, -yrsInRetire)) / realRate;
-        const mr = rate / 12; const n = yrsToRetire * 12;
-        const sipNeeded = corpus * mr / (Math.pow(1 + mr, n) - 1);
-
-        return `For retirement at age <strong>${retAge}</strong> (current age ~${age}):<div class="msg-result">
-            <div class="msg-result-row"><span class="mrr-label">Corpus needed</span><span class="mrr-value">${fmtS(corpus)}</span></div>
-            <div class="msg-result-row"><span class="mrr-label">Monthly SIP</span><span class="mrr-value">${fmt(sipNeeded)}/mo</span></div>
-            <div class="msg-result-row"><span class="mrr-label">Future monthly expense</span><span class="mrr-value">${fmt(futureMonthExp)}/mo</span></div>
-        </div><br>💡 <em>Assuming ₹30K/mo current expenses, 6% inflation, 12% returns, life expectancy 80 years. Visit our Retirement Calculator for customized results!</em>`;
-    }
-
-    // Case 4: Just a target amount
-    if (targetAmount) {
-        const y = 15;
-        const mr = 0.12 / 12;
-        const n = y * 12;
-        const sip = targetAmount * mr / (Math.pow(1 + mr, n) - 1);
-        return `To reach <strong>${fmtS(targetAmount)}</strong> in ${y} years at 12% returns:<div class="msg-result">
-            <div class="msg-result-row"><span class="mrr-label">Monthly SIP needed</span><span class="mrr-value">${fmt(sip)}/mo</span></div>
-            <div class="msg-result-row"><span class="mrr-label">Total you'll invest</span><span class="mrr-value">${fmt(sip * n)}</span></div>
-            <div class="msg-result-row"><span class="mrr-label">Market returns</span><span class="mrr-value">${fmt(targetAmount - sip * n)}</span></div>
-        </div><br>💡 <em>Specify a time horizon for more accurate results, e.g., "I want 1 crore in 10 years"</em>`;
-    }
-
-    // Case 5: General help
-    if (lower.includes('help') || lower.includes('what') || lower.includes('how')) {
-        return `I can help you with investment planning! Try asking me:<br><br>
-        🎯 <strong>"I want 1 crore in 20 years"</strong> — Goal planning<br>
-        💰 <strong>"I can invest 10,000 per month"</strong> — Wealth projection<br>
-        🏖️ <strong>"I want early retirement"</strong> — Retirement planning<br>
-        📈 <strong>"50 lakh in 10 years"</strong> — SIP calculation<br><br>
-        Just type naturally with amounts and time periods!`;
-    }
-
-    // Default
-    return `I understood your query but need more specific numbers. Try something like:<br><br>
-    • <strong>"I want 1 crore in 20 years"</strong><br>
-    • <strong>"I can invest 5000 per month for 15 years"</strong><br>
-    • <strong>"I want to retire at 50"</strong><br><br>
-    Include an amount and/or time period for personalized calculations! 📊`;
+    input.disabled = false;
+    document.getElementById('ai-send').disabled = false;
+    input.focus();
+    messages.scrollTop = messages.scrollHeight;
 }
 
 /* ===== INIT ===== */

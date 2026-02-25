@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Investment Assistant — Smart Financial Planning | Rushi Finance Tools</title>
     <meta name="description"
-        content="Type your financial goal in plain English and get instant investment advice with calculations. Powered by smart keyword analysis.">
+        content="AI-powered financial advisor using Google Gemini. Get instant investment advice, SIP calculations and retirement planning in plain English.">
     <meta name="keywords"
         content="AI investment, financial assistant, smart calculator, investment advice, SIP advisor">
     <meta name="author" content="Rushi Sonar">
@@ -85,23 +85,30 @@
         <div class="page-head">
             <span class="icon">🤖</span>
             <h1>AI Investment Assistant</h1>
-            <p>Type your financial goal in plain English — I'll calculate the exact plan for you</p>
+            <p>Powered by Google Gemini AI — Ask anything about investments, SIPs, retirement, and financial planning
+            </p>
         </div>
+
+        <!-- API Key Setup -->
+        <div id="ai-api-setup"></div>
 
         <div class="ai-section">
             <div class="ai-chat-box">
                 <div class="ai-chat-header">
                     <div class="ai-avatar">🤖</div>
                     <div>
-                        <div class="ach-name">Rushi AI Assistant</div>
-                        <div class="ach-status">Online</div>
+                        <div class="ach-name">Rushi AI <span
+                                style="font-size:10px;padding:2px 6px;background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;border-radius:8px;margin-left:4px;font-weight:600">Gemini</span>
+                        </div>
+                        <div class="ach-status">Powered by Google Gemini 2.0 Flash</div>
                     </div>
                 </div>
                 <div class="ai-messages" id="ai-messages">
                     <div class="ai-msg bot">
-                        Hey there! 👋 I'm your AI Investment Assistant. Tell me your financial goals and I'll help you
-                        plan.<br><br>
-                        Try asking me something like:
+                        Hey there! 👋 I'm <strong>Rushi AI</strong>, your personal financial advisor powered by
+                        <strong>Google Gemini</strong>. I can help with SIPs, investments, retirement planning, tax
+                        saving, and much more!<br><br>
+                        Connect your free Gemini API key above, then try asking me:
                         <div class="ai-suggestions">
                             <button class="ai-suggestion">I want 1 crore in 20 years</button>
                             <button class="ai-suggestion">I can invest 10,000 per month</button>
