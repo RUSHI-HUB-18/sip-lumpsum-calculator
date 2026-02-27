@@ -1402,6 +1402,432 @@ function animateCounter(el, target, suffix) {
     }, 16);
 }
 
+/* =================================================================
+   HELPER: Format text inputs (comma formatting while typing)
+   ================================================================= */
+function fmtInput(val) {
+    val = val.replace(/[^0-9]/g, '');
+    if (!val) return '';
+    let n = parseInt(val);
+    return n.toLocaleString('en-IN');
+}
+
+function parseNum(id) {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    return parseFloat(el.value.replace(/,/g, '')) || 0;
+}
+
+function vldText(id, errId) {
+    const val = parseNum(id);
+    const el = document.getElementById(id);
+    const err = document.getElementById(errId);
+    if (!el || !err) return true;
+    if (val <= 0) {
+        el.classList.add('err');
+        err.textContent = 'Please enter a valid amount';
+        err.style.display = 'block';
+        return false;
+    }
+    el.classList.remove('err');
+    err.style.display = 'none';
+    return true;
+}
+
+/* =================================================================
+   FD & RD CALCULATOR
+   ================================================================= */
+function switchFDRD(mode) {
+    const fdForm = document.getElementById('fd-form');
+    const rdForm = document.getElementById('rd-form');
+    const fdTab = document.getElementById('fd-tab');
+    const rdTab = document.getElementById('rd-tab');
+    const results = document.getElementById('fdrd-results');
+    if (!fdForm || !rdForm) return;
+
+    if (mode === 'fd') {
+        fdForm.style.display = 'block';
+        rdForm.style.display = 'none';
+        fdTab.classList.add('active');
+        rdTab.classList.remove('active');
+    } else {
+        fdForm.style.display = 'none';
+        rdForm.style.display = 'block';
+        rdTab.classList.add('active');
+        fdTab.classList.remove('active');
+    }
+    if (results) results.style.display = 'none';
+}
+
+function calcFD() {
+    const amount = parseNum('fd-amount');
+    const rate = parseFloat(document.getElementById('fd-rate')?.value) || 0;
+    const tenure = parseFloat(document.getElementById('fd-tenure')?.value) || 0;
+    const compound = parseInt(document.getElementById('fd-compound')?.value) || 4;
+
+    // Validate
+    let ok = true;
+    if (!vldText('fd-amount', 'err-fd-amount')) ok = false;
+    if (rate <= 0) {
+        const el = document.getElementById('fd-rate');
+        const err = document.getElementById('err-fd-rate');
+        if (el && err) { el.classList.add('err'); err.textContent = 'Enter a valid rate'; err.style.display = 'block'; ok = false; }
+    } else {
+        document.getElementById('fd-rate')?.classList.remove('err');
+        const err = document.getElementById('err-fd-rate'); if (err) err.style.display = 'none';
+    }
+    if (tenure <= 0) {
+        const el = document.getElementById('fd-tenure');
+        const err = document.getElementById('err-fd-tenure');
+        if (el && err) { el.classList.add('err'); err.textContent = 'Enter a valid tenure'; err.style.display = 'block'; ok = false; }
+    } else {
+        document.getElementById('fd-tenure')?.classList.remove('err');
+        const err = document.getElementById('err-fd-tenure'); if (err) err.style.display = 'none';
+    }
+    if (!ok) return;
+
+    // FD Compound Interest: A = P × (1 + r/n)^(n×t)
+    const r = rate / 100;
+    const maturity = amount * Math.pow(1 + r / compound, compound * tenure);
+    const interest = maturity - amount;
+    const returnPct = ((interest / amount) * 100).toFixed(1);
+    const effectiveYield = ((Math.pow(maturity / amount, 1 / tenure) - 1) * 100).toFixed(2);
+
+    // Show results
+    document.getElementById('fdrd-result-title').textContent = '💎 Fixed Deposit Results';
+    document.getElementById('fdrd-label-invested').textContent = 'Deposit Amount';
+    document.getElementById('fdrd-invested').textContent = fmt(amount);
+    document.getElementById('fdrd-interest').textContent = fmt(interest);
+    document.getElementById('fdrd-maturity').textContent = fmt(maturity);
+    document.getElementById('fdrd-return-pct').textContent = '+' + returnPct + '%';
+    document.getElementById('fdrd-effective-yield').textContent = effectiveYield + '% p.a.';
+
+    const results = document.getElementById('fdrd-results');
+    if (results) { results.style.display = 'block'; results.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+    // Charts
+    const c = getColors();
+    mkDoughnut('fdrd-doughnut-chart', ['Deposit', 'Interest Earned'], [amount, interest], [c.g, c.b]);
+
+    // Yearly growth line chart
+    const labels = [];
+    const growthData = [];
+    for (let y = 0; y <= tenure; y++) {
+        labels.push(y === 0 ? 'Start' : 'Yr ' + y);
+        growthData.push(Math.round(amount * Math.pow(1 + r / compound, compound * y)));
+    }
+    mkLine('fdrd-line-chart', labels, [
+        { label: 'FD Value', data: growthData, borderColor: c.g, backgroundColor: c.g + '20', fill: true },
+        { label: 'Deposit', data: labels.map(() => amount), borderColor: c.a, borderDash: [5, 5], backgroundColor: 'transparent', fill: false }
+    ]);
+
+    window._lastFDRD = { type: 'FD', amount, rate, tenure, interest, maturity };
+}
+
+function calcRD() {
+    const monthly = parseNum('rd-amount');
+    const rate = parseFloat(document.getElementById('rd-rate')?.value) || 0;
+    const tenure = parseFloat(document.getElementById('rd-tenure')?.value) || 0;
+
+    // Validate
+    let ok = true;
+    if (!vldText('rd-amount', 'err-rd-amount')) ok = false;
+    if (rate <= 0) {
+        const el = document.getElementById('rd-rate');
+        const err = document.getElementById('err-rd-rate');
+        if (el && err) { el.classList.add('err'); err.textContent = 'Enter a valid rate'; err.style.display = 'block'; ok = false; }
+    } else {
+        document.getElementById('rd-rate')?.classList.remove('err');
+        const err = document.getElementById('err-rd-rate'); if (err) err.style.display = 'none';
+    }
+    if (tenure <= 0) {
+        const el = document.getElementById('rd-tenure');
+        const err = document.getElementById('err-rd-tenure');
+        if (el && err) { el.classList.add('err'); err.textContent = 'Enter a valid tenure'; err.style.display = 'block'; ok = false; }
+    } else {
+        document.getElementById('rd-tenure')?.classList.remove('err');
+        const err = document.getElementById('err-rd-tenure'); if (err) err.style.display = 'none';
+    }
+    if (!ok) return;
+
+    // RD: quarterly compounding
+    const totalMonths = tenure * 12;
+    const totalInvested = monthly * totalMonths;
+    const qr = (rate / 100) / 4; // quarterly rate
+
+    let maturity = 0;
+    for (let m = 1; m <= totalMonths; m++) {
+        const remainingQuarters = ((totalMonths - m + 1) / 3);
+        maturity += monthly * Math.pow(1 + qr, remainingQuarters);
+    }
+
+    const interest = maturity - totalInvested;
+    const returnPct = ((interest / totalInvested) * 100).toFixed(1);
+    const effectiveYield = ((Math.pow(maturity / totalInvested, 1 / tenure) - 1) * 100).toFixed(2);
+
+    // Show results
+    document.getElementById('fdrd-result-title').textContent = '📅 Recurring Deposit Results';
+    document.getElementById('fdrd-label-invested').textContent = 'Total Deposited';
+    document.getElementById('fdrd-invested').textContent = fmt(totalInvested);
+    document.getElementById('fdrd-interest').textContent = fmt(interest);
+    document.getElementById('fdrd-maturity').textContent = fmt(maturity);
+    document.getElementById('fdrd-return-pct').textContent = '+' + returnPct + '%';
+    document.getElementById('fdrd-effective-yield').textContent = effectiveYield + '% p.a.';
+
+    const results = document.getElementById('fdrd-results');
+    if (results) { results.style.display = 'block'; results.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+    // Charts
+    const c = getColors();
+    mkDoughnut('fdrd-doughnut-chart', ['Deposited', 'Interest Earned'], [totalInvested, interest], [c.g, c.b]);
+
+    // Yearly growth
+    const labels = [];
+    const investedLine = [];
+    const valueLine = [];
+    for (let y = 0; y <= tenure; y++) {
+        labels.push(y === 0 ? 'Start' : 'Yr ' + y);
+        const mths = y * 12;
+        investedLine.push(monthly * mths);
+        let val = 0;
+        for (let m = 1; m <= mths; m++) {
+            val += monthly * Math.pow(1 + qr, ((mths - m + 1) / 3));
+        }
+        valueLine.push(Math.round(val));
+    }
+    mkLine('fdrd-line-chart', labels, [
+        { label: 'Total Deposited', data: investedLine, borderColor: c.a, backgroundColor: c.a + '20', fill: true },
+        { label: 'RD Value', data: valueLine, borderColor: c.g, backgroundColor: c.g + '20', fill: true }
+    ]);
+
+    window._lastFDRD = { type: 'RD', monthly, rate, tenure, totalInvested, interest, maturity };
+}
+
+function shareFDRD(platform) {
+    const d = window._lastFDRD;
+    if (!d) { showToast('Calculate first!', '⚠️'); return; }
+    const text = d.type === 'FD'
+        ? `💎 FD Calculator | Deposit: ${fmt(d.amount)} @ ${d.rate}% for ${d.tenure} yrs → Maturity: ${fmt(d.maturity)} | Interest: ${fmt(d.interest)} | Rushi Finance Tools`
+        : `📅 RD Calculator | ₹${d.monthly}/mo @ ${d.rate}% for ${d.tenure} yrs → Maturity: ${fmt(d.maturity)} | Interest: ${fmt(d.interest)} | Rushi Finance Tools`;
+    if (platform === 'whatsapp') window.open('https://wa.me/?text=' + encodeURIComponent(text));
+    else if (platform === 'twitter') window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text));
+    else { navigator.clipboard?.writeText(text); showToast('Copied to clipboard!'); }
+}
+
+function exportFDRDCSV() {
+    const d = window._lastFDRD;
+    if (!d) { showToast('Calculate first!', '⚠️'); return; }
+    let csv = 'Metric,Value\n';
+    if (d.type === 'FD') {
+        csv += `Deposit Amount,${d.amount}\nRate,${d.rate}%\nTenure,${d.tenure} years\nMaturity,${Math.round(d.maturity)}\nInterest,${Math.round(d.interest)}\n`;
+    } else {
+        csv += `Monthly,${d.monthly}\nRate,${d.rate}%\nTenure,${d.tenure} years\nTotal Deposited,${d.totalInvested}\nMaturity,${Math.round(d.maturity)}\nInterest,${Math.round(d.interest)}\n`;
+    }
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${d.type}_calculation.csv`;
+    a.click();
+    showToast('CSV exported! 📊');
+}
+
+/* =================================================================
+   INCOME TAX CALCULATOR — Old vs New Regime (FY 2025-26)
+   ================================================================= */
+function calcTax() {
+    const income = parseNum('tax-income');
+    if (!vldText('tax-income', 'err-tax-income')) return;
+
+    const ageGroup = document.getElementById('tax-age')?.value || 'general';
+    const stdDeduction = parseInt(document.getElementById('tax-std')?.value) || 75000;
+    const ded80c = Math.min(parseNum('tax-80c'), 150000);
+    const ded80d = parseNum('tax-80d');
+    const dedHRA = parseNum('tax-hra');
+    const ded80ccd = Math.min(parseNum('tax-80ccd'), 50000);
+    const dedOther = parseNum('tax-other');
+
+    // ===== OLD REGIME =====
+    const oldDeductions = stdDeduction + ded80c + ded80d + dedHRA + ded80ccd + dedOther;
+    const oldTaxableIncome = Math.max(income - oldDeductions, 0);
+
+    // Old Regime slabs (based on age)
+    let oldTax = 0;
+    let oldSlabs = [];
+
+    if (ageGroup === 'supersenior') {
+        // Super Senior: 0-5L = 0%, 5-10L = 20%, 10L+ = 30%
+        oldSlabs = [
+            { range: '₹0 – ₹5L', rate: '0%', tax: 0 },
+            { range: '₹5L – ₹10L', rate: '20%', tax: Math.min(Math.max(oldTaxableIncome - 500000, 0), 500000) * 0.20 },
+            { range: '₹10L+', rate: '30%', tax: Math.max(oldTaxableIncome - 1000000, 0) * 0.30 }
+        ];
+    } else if (ageGroup === 'senior') {
+        // Senior: 0-3L = 0%, 3-5L = 5%, 5-10L = 20%, 10L+ = 30%
+        oldSlabs = [
+            { range: '₹0 – ₹3L', rate: '0%', tax: 0 },
+            { range: '₹3L – ₹5L', rate: '5%', tax: Math.min(Math.max(oldTaxableIncome - 300000, 0), 200000) * 0.05 },
+            { range: '₹5L – ₹10L', rate: '20%', tax: Math.min(Math.max(oldTaxableIncome - 500000, 0), 500000) * 0.20 },
+            { range: '₹10L+', rate: '30%', tax: Math.max(oldTaxableIncome - 1000000, 0) * 0.30 }
+        ];
+    } else {
+        // General: 0-2.5L = 0%, 2.5-5L = 5%, 5-10L = 20%, 10L+ = 30%
+        oldSlabs = [
+            { range: '₹0 – ₹2.5L', rate: '0%', tax: 0 },
+            { range: '₹2.5L – ₹5L', rate: '5%', tax: Math.min(Math.max(oldTaxableIncome - 250000, 0), 250000) * 0.05 },
+            { range: '₹5L – ₹10L', rate: '20%', tax: Math.min(Math.max(oldTaxableIncome - 500000, 0), 500000) * 0.20 },
+            { range: '₹10L+', rate: '30%', tax: Math.max(oldTaxableIncome - 1000000, 0) * 0.30 }
+        ];
+    }
+    oldTax = oldSlabs.reduce((sum, s) => sum + s.tax, 0);
+
+    // 87A rebate — old regime (taxable income <= 5L)
+    if (oldTaxableIncome <= 500000) oldTax = 0;
+
+    const oldCess = oldTax * 0.04;
+    const oldTotal = oldTax + oldCess;
+    const oldEffective = income > 0 ? ((oldTotal / income) * 100).toFixed(1) : '0.0';
+
+    // ===== NEW REGIME (FY 2025-26) =====
+    const newDeductions = stdDeduction; // only standard deduction in new regime
+    const newTaxableIncome = Math.max(income - newDeductions, 0);
+
+    // New Regime slabs FY 2025-26
+    const newSlabs = [
+        { range: '₹0 – ₹4L', rate: '0%', tax: 0 },
+        { range: '₹4L – ₹8L', rate: '5%', tax: Math.min(Math.max(newTaxableIncome - 400000, 0), 400000) * 0.05 },
+        { range: '₹8L – ₹12L', rate: '10%', tax: Math.min(Math.max(newTaxableIncome - 800000, 0), 400000) * 0.10 },
+        { range: '₹12L – ₹16L', rate: '15%', tax: Math.min(Math.max(newTaxableIncome - 1200000, 0), 400000) * 0.15 },
+        { range: '₹16L – ₹20L', rate: '20%', tax: Math.min(Math.max(newTaxableIncome - 1600000, 0), 400000) * 0.20 },
+        { range: '₹20L – ₹24L', rate: '25%', tax: Math.min(Math.max(newTaxableIncome - 2000000, 0), 400000) * 0.25 },
+        { range: '₹24L+', rate: '30%', tax: Math.max(newTaxableIncome - 2400000, 0) * 0.30 }
+    ];
+
+    let newTax = newSlabs.reduce((sum, s) => sum + s.tax, 0);
+
+    // 87A rebate — new regime (taxable income <= 12L, max rebate 60K for FY2025-26)
+    if (newTaxableIncome <= 1200000) {
+        newTax = Math.max(newTax - 60000, 0);
+    }
+
+    const newCess = newTax * 0.04;
+    const newTotal = newTax + newCess;
+    const newEffective = income > 0 ? ((newTotal / income) * 100).toFixed(1) : '0.0';
+
+    // ===== DISPLAY RESULTS =====
+    document.getElementById('old-taxable').textContent = fmt(oldTaxableIncome);
+    document.getElementById('old-tax').textContent = fmt(oldTotal);
+    document.getElementById('old-effective').textContent = oldEffective + '%';
+    document.getElementById('new-taxable').textContent = fmt(newTaxableIncome);
+    document.getElementById('new-tax').textContent = fmt(newTotal);
+    document.getElementById('new-effective').textContent = newEffective + '%';
+
+    // Winner banner
+    const banner = document.getElementById('tax-winner-banner');
+    const savings = Math.abs(oldTotal - newTotal);
+    if (oldTotal < newTotal) {
+        banner.innerHTML = `🏆 <strong>Old Regime saves you ${fmt(savings)}</strong> — Your deductions make the old regime more tax-efficient!`;
+        banner.className = 'tax-winner-banner old-wins';
+    } else if (newTotal < oldTotal) {
+        banner.innerHTML = `🏆 <strong>New Regime saves you ${fmt(savings)}</strong> — Fewer deductions? The new regime works better for you!`;
+        banner.className = 'tax-winner-banner new-wins';
+    } else {
+        banner.innerHTML = '🤝 <strong>Both regimes result in the same tax</strong> — Choose based on your preference!';
+        banner.className = 'tax-winner-banner tie';
+    }
+
+    // Savings detail
+    const savingsCard = document.getElementById('tax-savings-text');
+    savingsCard.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center">
+            <div><div style="font-size:12px;color:var(--text-3)">Total Deductions (Old)</div><div style="font-size:18px;font-weight:700;color:var(--green)">${fmt(oldDeductions)}</div></div>
+            <div><div style="font-size:12px;color:var(--text-3)">You Save (Best Regime)</div><div style="font-size:18px;font-weight:700;color:var(--text-1)">${fmt(savings)}</div></div>
+        </div>`;
+
+    // Slab breakdowns
+    const oldSlabHTML = oldSlabs.map(s => `<div class="slab-row"><span>${s.range}</span><span>${s.rate}</span><span>${fmt(s.tax)}</span></div>`).join('');
+    document.getElementById('old-slab-details').innerHTML = oldSlabHTML;
+
+    const newSlabHTML = newSlabs.map(s => `<div class="slab-row"><span>${s.range}</span><span>${s.rate}</span><span>${fmt(s.tax)}</span></div>`).join('');
+    document.getElementById('new-slab-details').innerHTML = newSlabHTML;
+
+    // Bar chart
+    const c = getColors();
+    const ctx = document.getElementById('tax-chart');
+    if (ctx) {
+        if (charts['tax-chart']) charts['tax-chart'].destroy();
+        charts['tax-chart'] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Old Regime', 'New Regime'],
+                datasets: [{
+                    label: 'Tax Payable',
+                    data: [oldTotal, newTotal],
+                    backgroundColor: [c.a + 'cc', c.g + 'cc'],
+                    borderColor: [c.a, c.g],
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: { label: ctx => 'Tax: ' + fmt(ctx.raw) }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: c.grid },
+                        ticks: { color: c.txt, callback: v => fmtS(v) }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: c.txt, font: { weight: 600 } }
+                    }
+                },
+                animation: { duration: 800 }
+            }
+        });
+    }
+
+    // Show results
+    const results = document.getElementById('tax-results');
+    if (results) { results.style.display = 'block'; results.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
+    window._lastTax = { income, oldTotal, newTotal, savings, oldTaxableIncome, newTaxableIncome, oldDeductions, winner: oldTotal <= newTotal ? 'Old' : 'New' };
+}
+
+function shareTax(platform) {
+    const d = window._lastTax;
+    if (!d) { showToast('Calculate first!', '⚠️'); return; }
+    const text = `🧾 Tax Comparison | Income: ${fmt(d.income)} | Old Regime: ${fmt(d.oldTotal)} | New Regime: ${fmt(d.newTotal)} | Save ${fmt(d.savings)} with ${d.winner} Regime | Rushi Finance Tools`;
+    if (platform === 'whatsapp') window.open('https://wa.me/?text=' + encodeURIComponent(text));
+    else if (platform === 'twitter') window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text));
+    else { navigator.clipboard?.writeText(text); showToast('Copied to clipboard!'); }
+}
+
+function exportTaxCSV() {
+    const d = window._lastTax;
+    if (!d) { showToast('Calculate first!', '⚠️'); return; }
+    let csv = 'Metric,Value\n';
+    csv += `Gross Income,${d.income}\n`;
+    csv += `Old Regime Taxable,${d.oldTaxableIncome}\n`;
+    csv += `Old Regime Tax,${Math.round(d.oldTotal)}\n`;
+    csv += `New Regime Taxable,${d.newTaxableIncome}\n`;
+    csv += `New Regime Tax,${Math.round(d.newTotal)}\n`;
+    csv += `Savings,${Math.round(d.savings)}\n`;
+    csv += `Better Regime,${d.winner}\n`;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'tax_comparison.csv';
+    a.click();
+    showToast('CSV exported! 📊');
+}
+
 /* ===== INIT ===== */
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
