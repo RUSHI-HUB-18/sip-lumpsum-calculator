@@ -14,6 +14,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="app.js" defer></script>
 </head>
 
@@ -76,6 +80,32 @@
                 <div class="btn-row"><button class="btn btn-go" onclick="doSignup()" style="flex:1">Create
                         Account</button></div>
                 <div class="modal-switch">Already have an account? <a onclick="switchAuthMode('login')">Login</a></div>
+            </div>
+            <!-- Forgot Password Form -->
+            <div id="auth-forgot-form" style="display:none">
+                <div class="modal-title">Reset Password 🔐</div>
+                <div class="modal-sub">Enter your registered email to reset your password</div>
+                <div class="fg"><label for="forgot-email">Email Address</label>
+                    <div class="input-w"><input type="email" id="forgot-email" placeholder="you@email.com"></div>
+                </div>
+                <div id="forgot-msg"
+                    style="display:none;padding:8px 12px;border-radius:8px;background:var(--bg-2);font-size:13px;margin-bottom:12px">
+                </div>
+                <div id="forgot-reset-section" style="display:none">
+                    <div class="fg"><label for="forgot-new-pass">New Password</label>
+                        <div class="input-w"><input type="password" id="forgot-new-pass" placeholder="Min 4 characters">
+                        </div>
+                    </div>
+                    <div class="fg"><label for="forgot-confirm-pass">Confirm Password</label>
+                        <div class="input-w"><input type="password" id="forgot-confirm-pass"
+                                placeholder="Re-enter password"></div>
+                    </div>
+                    <div class="btn-row"><button class="btn btn-go" onclick="doResetPassword()" style="flex:1">Reset
+                            Password</button></div>
+                </div>
+                <div class="btn-row" id="forgot-verify-btn"><button class="btn btn-go" onclick="doForgotPassword()"
+                        style="flex:1">Send Reset Link 📧</button></div>
+                <div class="modal-switch">Remember your password? <a onclick="switchAuthMode('login')">Login</a></div>
             </div>
         </div>
     </div>
@@ -143,7 +173,7 @@
     <footer class="site-footer">
         <div class="footer-line"></div>
         <div class="footer-text">© 2026 Rushi Sonar • All Rights Reserved<br>Made with ❤️ by <a
-                href="https://github.com/RUSHI-HUB-18" target="_blank">Rushi</a></div>
+                href="https://rushisonar.rushifinance.app" target="_blank">Rushi</a></div>
     </footer>
 </body>
 
